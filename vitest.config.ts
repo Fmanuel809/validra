@@ -1,6 +1,16 @@
 import { defineConfig } from 'vitest/config'
+import { resolve } from 'path'
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, './src'),
+      '@/core': resolve(__dirname, './src/core'),
+      '@/dls': resolve(__dirname, './src/dls'),
+      '@/operations': resolve(__dirname, './src/operations'),
+      '@/utils': resolve(__dirname, './src/utils')
+    }
+  },
   test: {
     environment: 'node',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}', 'tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -24,10 +34,10 @@ export default defineConfig({
         }
       }
     },
-    reporters: ['verbose', 'json', 'html'],
+    reporters: ['verbose'],
     outputFile: {
-      json: './test-results.json',
-      html: './test-results.html'
+      json: './test-output/test-results.json',
+      html: './test-output/test-results.html'
     },
     globals: true,
     watch: false,
