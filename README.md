@@ -1,7 +1,7 @@
 # 🚀 Validra
 
 <div align="center">
-  <img src="validra.png" alt="Validra Logo" width="200" height="200">
+  <img src="validra.png" alt="Validra Logo" width="200">
 </div>
 
 > Zero-dependency, high-performance business rules engine designed to validate dynamic rule sets with precision, flexibility, and speed across any environment.
