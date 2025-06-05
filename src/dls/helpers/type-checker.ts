@@ -17,7 +17,7 @@ export class TypeChecker {
         return typeof value === 'boolean';
     }
 
-    isArray(value: unknown): boolean {
+    static isArray(value: unknown): boolean {
         return Array.isArray(value);
     }
 
