@@ -5,8 +5,7 @@
 [![npm version](https://badge.fury.io/js/validra.svg)](https://badge.fury.io/js/validra)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
-[![codecov](https://codecov.io/gh/Fmanuel809/validra/graph/badge.svg)](https://codecov.io/gh/Fmanuel809/validra)
-[![Documentation](https://img.shields.io/badge/docs-github--pages-blue)](https://fmanuel809.github.io/validra/)
+[![codecov](https://codecov.io/gh/Fmanuel809/validra/graph/badge.svg?token=8Z7LC3CJ8P)](https://codecov.io/gh/Fmanuel809/validra)
 [![Documentation Coverage](https://fmanuel809.github.io/validra/coverage.svg)](https://fmanuel809.github.io/validra/)
 [![CI](https://github.com/Fmanuel809/validra/workflows/CI%2FCD/badge.svg)](https://github.com/Fmanuel809/validra/actions)
 
