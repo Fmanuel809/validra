@@ -1,17 +1,59 @@
 {
   "compilerOptions": {
+    // Configuración básica
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    
+    // Configuración de tipos
     "strict": true,
     "noImplicitAny": true,
-    "esModuleInterop": true,
     "strictNullChecks": true,
-    "target": "ES2022",
-    "moduleResolution": "Node",
-    "module": "CommonJS",
-    "declaration": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    
+    // Configuración de módulos
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
+    "verbatimModuleSyntax": false,
+    
+    // Configuración de salida
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "dist",
     "noEmit": true,
-    "outDir": "dist"
+    
+    // Configuración avanzada
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": false,
+    
+    // Configuración de paths
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/core/*": ["src/core/*"],
+      "@/dsl/*": ["src/dsl/*"],
+      "@/operations/*": ["src/operations/*"]
+    }
   },
-  "include": ["src"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/**/*",
+    "tests/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "docs",
+    "coverage"
+  ]
 }

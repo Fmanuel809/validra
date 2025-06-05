@@ -1,32 +1,31 @@
 /** @type {Partial<import("typedoc").TypeDocOptions>} */
 const config = {
-  name: 'Microservicios de Accidentes laborales',
+  name: 'Validra - Business Rules Engine',
   entryPointStrategy: 'expand',
   entryPoints: ['./src'],
   out: 'docs',
-  theme: 'default',
+  theme: 'hierarchy',
   excludeExternals: false,
-  exclude: ['**/*+(.spec|.e2e|.module).ts', '**/index.ts', '**/main.ts'],
+  exclude: ['**/*+(.spec|.test|.e2e).ts', '**/tests/**/*'],
   navigation: {
-    includeCategories: false,
-    includeGroups: false,
-    excludeReferences: true,
+    includeCategories: true,
+    includeGroups: true,
+    excludeReferences: false,
     includeFolders: true,
     compactFolders: true,
   },
-  categorizeByGroup: false,
+  categorizeByGroup: true,
   cleanOutputDir: true,
   customFooterHtml:
-    '<p class="tsd-generator">Departamento de Desarrollo e Implemetación | SISALRIL.</p>',
+    '<p class="tsd-generator">Generated with ❤️ by <a href="https://github.com/Fmanuel809/validra" target="_blank">Validra</a> | MIT License</p>',
   plugin: [
     'typedoc-plugin-dt-links',
     'typedoc-plugin-coverage',
     'typedoc-github-theme',
   ],
-  coverageLabel: 'Docs Status',
+  coverageLabel: 'Documentation Coverage',
   coverageOutputType: 'all',
   coverageSvgWidth: 150,
-  theme: 'hierarchy',
   requiredToBeDocumented: [
     'Enum',
     'EnumMember',
@@ -46,6 +45,26 @@ const config = {
     rewrittenLink: true,
     unusedMergeModuleWith: false,
   },
+  // Configuración específica para Validra
+  readme: './README.md',
+  includeVersion: true,
+  searchInComments: true,
+  sort: ['source-order'],
+  kindSortOrder: [
+    'Document',
+    'Module',
+    'Namespace',
+    'Enum',
+    'EnumMember',
+    'Class',
+    'Interface',
+    'TypeAlias',
+    'Constructor',
+    'Property',
+    'Method',
+    'Function',
+    'Variable',
+  ],
 };
 
 export default config;
