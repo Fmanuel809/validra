@@ -1,0 +1,68 @@
+{
+  "name": "validra",
+  "version": "0.1.0",
+  "description": "Validra is a zero-dependency, high-performance business rules engine designed to validate dynamic rule sets with precision, flexibility, and speed across any environment.",
+  "keywords": [
+    "validation",
+    "rules",
+    "engine",
+    "business",
+    "rules",
+    "logic",
+    "engine",
+    "typescript",
+    "zero-deps",
+    "framework-agnostic",
+    "data",
+    "validation",
+    "async",
+    "rules",
+    "dsl",
+    "rule",
+    "evaluator",
+    "fact",
+    "validation",
+    "validra"
+  ],
+  "homepage": "https://github.com/Fmanuel809/validra#readme",
+  "bugs": {
+    "url": "https://github.com/Fmanuel809/validra/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fmanuel809/validra.git"
+  },
+  "license": "MIT",
+  "author": "Felix M. Martinez",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "browser": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    "import": "./dist/index.mjs",
+    "require": "./dist/index.cjs"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "clean": "rm -rf dist"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^22.15.29",
+    "@vitest/coverage-v8": "^3.2.1",
+    "tsup": "^8.5.0",
+    "typedoc": "^0.28.5",
+    "typedoc-github-theme": "^0.3.0",
+    "typedoc-plugin-coverage": "^4.0.1",
+    "typedoc-plugin-dt-links": "^2.0.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.1"
+  }
+}
