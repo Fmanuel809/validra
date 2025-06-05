@@ -4,7 +4,7 @@ const config = {
   entryPointStrategy: 'expand',
   entryPoints: ['./src'],
   out: 'docs',
-  theme: 'hierarchy',
+  theme: 'typedoc-github-theme',
   excludeExternals: false,
   exclude: ['**/*+(.spec|.test|.e2e).ts', '**/tests/**/*'],
   navigation: {
