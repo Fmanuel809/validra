@@ -17,7 +17,7 @@ const config = {
   categorizeByGroup: true,
   cleanOutputDir: true,
   customFooterHtml:
-    '<p class="tsd-generator">Generated with ❤️ by <a href="https://github.com/Fmanuel809/validra" target="_blank">Validra</a> | MIT License</p>',
+    '<p class="tsd-generator">By <a href="https://github.com/Fmanuel809/validra" target="_blank">Validra</a> | MIT License</p>',
   plugin: [
     'typedoc-plugin-dt-links',
     'typedoc-plugin-coverage',
@@ -25,7 +25,7 @@ const config = {
   ],
   coverageLabel: 'Documentation Coverage',
   coverageOutputType: 'all',
-  coverageSvgWidth: 150,
+  coverageSvgWidth: 200,
   requiredToBeDocumented: [
     'Enum',
     'EnumMember',

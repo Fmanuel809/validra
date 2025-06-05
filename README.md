@@ -7,6 +7,7 @@
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
 [![codecov](https://codecov.io/gh/Fmanuel809/validra/graph/badge.svg)](https://codecov.io/gh/Fmanuel809/validra)
 [![Documentation](https://img.shields.io/badge/docs-github--pages-blue)](https://fmanuel809.github.io/validra/)
+[![Documentation Coverage](https://fmanuel809.github.io/validra/coverage.svg)](https://fmanuel809.github.io/validra/)
 [![CI](https://github.com/Fmanuel809/validra/workflows/CI%2FCD/badge.svg)](https://github.com/Fmanuel809/validra/actions)
 
 ## ✨ Features
