@@ -62,7 +62,7 @@ export class TypeChecker {
      * @static
      */
     static isString(value: unknown): boolean {
-        return typeof value === 'string';
+        return typeof value === 'string' || value instanceof String;
     }
 
     /**
