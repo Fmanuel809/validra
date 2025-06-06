@@ -6,7 +6,7 @@
  * @since 1.0.0
  */
 
-import { isNumber } from "@/utils";
+import { countGraphemes, isNumber } from "@/utils";
 import { TypeChecker } from "./type-checker";
 
 /**
@@ -28,26 +28,6 @@ import { TypeChecker } from "./type-checker";
  * ```
  */
 export class StringChecker {
-
-    /**
-     * Counts the number of grapheme clusters (visible characters) in a string.
-     * This properly handles complex Unicode sequences like combined emojis.
-     * 
-     * @private
-     * @static
-     * @param {string} str - The string to count characters in
-     * @returns {number} The number of grapheme clusters
-     */
-    private static countGraphemes(str: string): number {
-        // Use Intl.Segmenter if available (modern browsers/Node.js)
-        if (typeof Intl !== 'undefined' && Intl.Segmenter) {
-            const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
-            return Array.from(segmenter.segment(str)).length;
-        }
-        
-        // Fallback to Array.from for basic Unicode support
-        return Array.from(str).length;
-    }
 
     /**
      * Checks if a string is empty after trimming whitespace.
@@ -220,7 +200,7 @@ export class StringChecker {
         }
 
         const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+(?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z0-9]+(?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
-        return this.regexMatch(value, emailPattern);
+        return emailPattern.test(value);
     }
 
     /**
@@ -250,7 +230,7 @@ export class StringChecker {
             throw 'Value must be a string to check if it is a URL.';
         }
         const urlPattern = /^(https?|ftp|file|ws|wss|ldap|file):\/\/[^\s/$.?#].[^\s]*$/i;
-        return this.regexMatch(value, urlPattern);
+        return urlPattern.test(value);
     }
 
     /**
@@ -279,7 +259,7 @@ export class StringChecker {
             throw 'Value must be a string to check if it is a UUID.';
         }
         const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        return this.regexMatch(value, uuidPattern);
+        return uuidPattern.test(value);
     }
 
     /**
@@ -312,7 +292,7 @@ export class StringChecker {
         }
 
         // Use countGraphemes to properly count Unicode characters (including complex emojis)
-        return this.countGraphemes(value.trim()) >= minLength;
+        return countGraphemes(value.trim()) >= minLength;
     }
 
     /**
@@ -345,6 +325,6 @@ export class StringChecker {
         }
 
         // Use countGraphemes to properly count Unicode characters (including complex emojis)
-        return this.countGraphemes(value.trim()) <= maxLength;
+        return countGraphemes(value.trim()) <= maxLength;
     }
 }
