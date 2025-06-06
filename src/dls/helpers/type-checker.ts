@@ -9,7 +9,7 @@
  * 
  * @module TypeChecker
  * @version 1.0.0
- * @author Validra Team
+ * @author Felix M. Martinez
  * @since 1.0.0
  */
 
