@@ -84,8 +84,9 @@ export class ValidraLogger {
      * ```
      */
     error(message: string, ...optionalParams: any[]): void {
-        console.error(`[${this.getTimestamp()}] [${this.source}] ${message}`, ...optionalParams);
-        throw new Error(`[${this.getTimestamp()}] [${this.source}] ${message}`);
+        const timestamp = this.getTimestamp();
+        console.error(`[${timestamp}] [${this.source}] ${message}`, ...optionalParams);
+        throw new Error(`[${timestamp}] [${this.source}] ${message}`);
     }
 
     /**
