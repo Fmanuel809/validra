@@ -7,6 +7,7 @@ docs/
 
 # Test coverage
 coverage/
+test-output/
 test-results.json
 test-results.html
 
