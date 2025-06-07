@@ -18,8 +18,11 @@ export class ValidraEngine {
   private callbacks: ValidraCallback[];
   private options: ValidraEngineOptions;
   private helperCache = new Map<string, any>();
+  private pathCache = new Map<string, string[]>();
   private compiledRules: CompiledRule[] = [];
   private logger: ValidraLogger;
+  private static readonly MAX_CACHE_SIZE = 100;
+  private static readonly MAX_PATH_CACHE_SIZE = 50;
 
   constructor(
     rules: Rule[], 
@@ -51,6 +54,109 @@ export class ValidraEngine {
     });
   }
 
+  /**
+   * Calculate data size in bytes with protection against massive data
+   */
+  private getDataSize(data: any): number {
+    try {
+      const str = JSON.stringify(data);
+      // Protect against extremely large data (>10MB)
+      if (str.length > 10 * 1024 * 1024) {
+        return -1; // Signal that data is too large
+      }
+      return str.length;
+    } catch (error) {
+      // Handle circular references or non-serializable data
+      return -1;
+    }
+  }
+
+  /**
+   * Format data size for logging with consistent formatting
+   */
+  private formatDataSize(dataSize: number): string {
+    return dataSize === -1 ? 'unknown (large/circular)' : `${dataSize} bytes`;
+  }
+
+  /**
+   * Validate unknown field if throwOnUnknownField is enabled
+   */
+  private validateUnknownField(compiledRule: CompiledRule, value: unknown): void {
+    if (this.options.throwOnUnknownField && value === undefined && compiledRule.pathSegments.length === 1) {
+      const errorMsg = `Unknown field: ${compiledRule.original.field}`;
+      this.logger.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+  }
+
+  /**
+   * Build arguments array for rule execution with parameter validation
+   */
+  private buildRuleArguments(compiledRule: CompiledRule, value: unknown): unknown[] {
+    const { helper, original } = compiledRule;
+    
+    if (!compiledRule.hasParams || helper.params.length === 0) {
+      return [value];
+    }
+
+    const params = (original as any).params || {};
+    const paramCount = helper.params.length;
+    
+    // Pre-allocate arguments array for better performance
+    const args = new Array(1 + paramCount);
+    args[0] = value;
+    
+    // Build arguments array based on helper.params with validation
+    for (let i = 0; i < paramCount; i++) {
+      const paramName = helper.params[i];
+      const paramValue = params[paramName];
+      
+      if (paramValue === undefined) {
+        throw new Error(`Required parameter '${paramName}' is missing for operation '${original.op}'`);
+      }
+      
+      args[i + 1] = paramValue;
+    }
+    
+    return args;
+  }
+
+  /**
+   * Validate input data with consistent error handling
+   */
+  private validateInputData(data: any): void {
+    if (!data || typeof data !== 'object') {
+      this.logger.error('Invalid data provided for validation', { 
+        dataType: typeof data,
+        isNull: data === null 
+      });
+      throw new Error('Data must be a valid object');
+    }
+  }
+
+  /**
+   * Log validation completion with performance metrics
+   */
+  private logValidationComplete(duration: number, dataSize: number, result: ValidraResult<any>, isAsync = false): void {
+    const type = isAsync ? 'Async validation' : 'Validation';
+    
+    this.debugLog(() => `${type} completed in ${duration.toFixed(2)}ms`, {
+      isValid: result.isValid,
+      duration: `${duration.toFixed(2)}ms`,
+      dataSize: this.formatDataSize(dataSize),
+      errorsFound: result.errors ? Object.keys(result.errors) : []
+    });
+
+    // Log warning para validaciones lentas
+    if (duration > 100) {
+      this.logger.warn(`Slow ${type.toLowerCase()} detected`, {
+        duration: `${duration.toFixed(2)}ms`,
+        rulesCount: this.compiledRules.length,
+        dataSize: this.formatDataSize(dataSize)
+      });
+    }
+  }
+
   public validate<T extends Record<string, any>>(
     data: T,
     callback?: string | ((result: ValidraResult<T>) => void),
@@ -59,10 +165,13 @@ export class ValidraEngine {
     const startTime = performance.now();
     
     // Validación de entrada
-    if (!data || typeof data !== 'object') {
-      this.logger.error('Invalid data provided for validation', { 
-        dataType: typeof data,
-        isNull: data === null 
+    this.validateInputData(data);
+
+    // Check data size for performance monitoring
+    const dataSize = this.getDataSize(data);
+    if (dataSize === -1) {
+      this.logger.warn('Large or circular data detected', {
+        message: 'Data size could not be calculated - possible circular references or very large data'
       });
     }
 
@@ -90,9 +199,7 @@ export class ValidraEngine {
         const value = this.getValue(data, compiledRule.pathSegments);
         
         // Validar campo desconocido si está habilitado
-        if (this.options.throwOnUnknownField && value === undefined && compiledRule.pathSegments.length === 1) {
-          this.logger.error(`Unknown field: ${compiledRule.original.field}`);
-        }
+        this.validateUnknownField(compiledRule, value);
         
         const isValid = this.applyRule(compiledRule, value);
 
@@ -140,21 +247,7 @@ export class ValidraEngine {
     const endTime = performance.now();
     const duration = endTime - startTime;
 
-    this.debugLog(() => `Validation completed in ${duration.toFixed(2)}ms`, {
-      isValid: result.isValid,
-      errorCount,
-      duration: `${duration.toFixed(2)}ms`,
-      errorsFound: result.errors ? Object.keys(result.errors) : []
-    });
-
-    // Log warning para validaciones lentas
-    if (duration > 100) {
-      this.logger.warn(`Slow validation detected`, {
-        duration: `${duration.toFixed(2)}ms`,
-        rulesCount: this.compiledRules.length,
-        dataSize: JSON.stringify(data).length
-      });
-    }
+    this.logValidationComplete(duration, dataSize, result, false);
 
     // Ejecutar callback si se proporciona
     this.executeCallback(callback, result);
@@ -169,8 +262,14 @@ export class ValidraEngine {
     const startTime = performance.now();
     
     // Validación de entrada
-    if (!data || typeof data !== 'object') {
-      throw new Error('Data must be a valid object');
+    this.validateInputData(data);
+
+    // Check data size for performance monitoring
+    const dataSize = this.getDataSize(data);
+    if (dataSize === -1) {
+      this.logger.warn('Large or circular data detected in async validation', {
+        message: 'Data size could not be calculated - possible circular references or very large data'
+      });
     }
 
     if (this.compiledRules.length === 0) {
@@ -191,9 +290,7 @@ export class ValidraEngine {
         const value = this.getValue(data, compiledRule.pathSegments);
         
         // Validar campo desconocido si está habilitado
-        if (this.options.throwOnUnknownField && value === undefined && compiledRule.pathSegments.length === 1) {
-          throw new Error(`Unknown field: ${compiledRule.original.field}`);
-        }
+        this.validateUnknownField(compiledRule, value);
         
         const isValid = await this.applyRuleAsync(compiledRule, value);
 
@@ -219,7 +316,7 @@ export class ValidraEngine {
     const endTime = performance.now();
     const duration = endTime - startTime;
 
-    this.debugLog(() => `Async validation completed in ${duration.toFixed(2)}ms. Result: ${result.isValid ? 'VALID' : 'INVALID'}`);
+    this.logValidationComplete(duration, dataSize, result, true);
 
     // Ejecutar callback si se proporciona
     await this.executeCallbackAsync(callback, result);
@@ -228,21 +325,45 @@ export class ValidraEngine {
   }
 
   private getHelper(op: string) {
-    if (!this.helperCache.has(op)) {
-      try {
-        // Hacer casting seguro para el tipo esperado por la API
-        const helper = helpersActions.getHelperResolverSchema(op as any);
-        this.helperCache.set(op, helper);
-      } catch (error) {
-        // Si el helper no existe, cachear null para evitar búsquedas repetidas
-        this.helperCache.set(op, null);
-      }
+    // LRU cache management
+    if (this.helperCache.has(op)) {
+      const helper = this.helperCache.get(op);
+      // Move to end for LRU
+      this.helperCache.delete(op);
+      this.helperCache.set(op, helper);
+      return helper;
     }
-    return this.helperCache.get(op);
+
+    try {
+      // Hacer casting seguro para el tipo esperado por la API
+      const helper = helpersActions.getHelperResolverSchema(op as any);
+      
+      // Cache size management
+      if (this.helperCache.size >= ValidraEngine.MAX_CACHE_SIZE) {
+        // Remove least recently used (first entry)
+        const firstKey = this.helperCache.keys().next().value;
+        if (firstKey !== undefined) {
+          this.helperCache.delete(firstKey);
+        }
+      }
+      
+      this.helperCache.set(op, helper);
+      return helper;
+    } catch (error) {
+      // Si el helper no existe, cachear null para evitar búsquedas repetidas
+      if (this.helperCache.size >= ValidraEngine.MAX_CACHE_SIZE) {
+        const firstKey = this.helperCache.keys().next().value;
+        if (firstKey !== undefined) {
+          this.helperCache.delete(firstKey);
+        }
+      }
+      this.helperCache.set(op, null);
+      return null;
+    }
   }
 
   /**
-   * Optimized getValue with pre-computed path segments
+   * Optimized getValue with pre-computed path segments and array validation
    */
   private getValue(data: any, pathSegments: string[]): unknown {
     if (pathSegments.length === 1 && pathSegments[0]) {
@@ -252,7 +373,17 @@ export class ValidraEngine {
     let current = data;
     for (const segment of pathSegments) {
       if (current == null) return undefined;
-      current = current[segment];
+      
+      // Handle array index access with validation
+      if (Array.isArray(current)) {
+        const index = parseInt(segment, 10);
+        if (isNaN(index) || index < 0 || index >= current.length) {
+          return undefined;
+        }
+        current = current[index];
+      } else {
+        current = current[segment];
+      }
     }
     return current;
   }
@@ -321,19 +452,23 @@ export class ValidraEngine {
   private compileRules(rules: Rule[]): CompiledRule[] {
     const startTime = performance.now();
     
-    const compiled = rules.map((rule, index) => {
+    // Pre-allocate array for better performance
+    const compiled: CompiledRule[] = new Array(rules.length);
+    
+    for (let i = 0; i < rules.length; i++) {
+      const rule = rules[i]!; // Safe because we're iterating within bounds
       const helper = helpersActions.getHelperResolverSchema(rule.op as any);
       if (!helper) {
-        throw new Error(`Unknown operation: ${rule.op} at rule index ${index}`);
+        throw new Error(`Unknown operation: ${rule.op} at rule index ${i}`);
       }
       
-      return {
+      compiled[i] = {
         original: rule,
         helper,
-        pathSegments: rule.field.includes('.') ? rule.field.split('.') : [rule.field],
+        pathSegments: this.getPathSegments(rule.field), // Use cached path segments
         hasParams: 'params' in rule && rule.params !== undefined
       };
-    });
+    }
 
     const endTime = performance.now();
     if (this.options.debug) {
@@ -370,76 +505,42 @@ export class ValidraEngine {
   }
 
   /**
-   * Apply compiled rule for optimized validation
+   * Apply compiled rule for optimized validation with enhanced error handling
    */
   private applyRule(compiledRule: CompiledRule, value: unknown): boolean {
     try {
-      const { helper, original, hasParams } = compiledRule;
+      const { helper, original } = compiledRule;
       if (!helper) {
         throw new Error(`Unknown operation: ${original.op}`);
       }
       
-      let isValid: boolean;
-      
-      if (!hasParams || helper.params.length === 0) {
-        // No parameters needed - pass only the value
-        isValid = helper.resolver(value);
-      } else {
-        // Parameters needed - extract them according to helper.params specification
-        const params = (original as any).params || {};
-        const args = [value];
-        
-        // Build arguments array based on helper.params
-        for (const paramName of helper.params) {
-          if (!(paramName in params)) {
-            throw new Error(`Missing required parameter: ${paramName}`);
-          }
-          args.push(params[paramName]);
-        }
-        
-        isValid = helper.resolver(...args);
-      }
+      const args = this.buildRuleArguments(compiledRule, value);
+      const isValid = helper.resolver(...args);
       
       return original.negative ? !isValid : isValid;
     } catch (error) {
-      throw new Error(`Rule validation failed: ${(error as Error).message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Error in operation '${compiledRule.original.op}' on field '${compiledRule.original.field}': ${errorMessage}`);
     }
   }
 
   /**
-   * Apply compiled rule for optimized async validation
+   * Apply compiled rule for optimized async validation with enhanced error handling
    */
   private async applyRuleAsync(compiledRule: CompiledRule, value: unknown): Promise<boolean> {
     try {
-      const { helper, original, hasParams } = compiledRule;
+      const { helper, original } = compiledRule;
       if (!helper) {
         throw new Error(`Unknown operation: ${original.op}`);
       }
       
-      let isValid: boolean;
-      
-      if (!hasParams || helper.params.length === 0) {
-        // No parameters needed - pass only the value
-        isValid = await helper.resolver(value);
-      } else {
-        // Parameters needed - extract them according to helper.params specification
-        const params = (original as any).params || {};
-        const args = [value];
-        
-        // Build arguments array based on helper.params
-        for (const paramName of helper.params) {
-          if (!(paramName in params)) {
-            throw new Error(`Missing required parameter: ${paramName}`);
-          }
-          args.push(params[paramName]);
-        }
-        
-        isValid = await helper.resolver(...args);
-      }
+      const args = this.buildRuleArguments(compiledRule, value);
+      const isValid = await helper.resolver(...args);
       
       return original.negative ? !isValid : isValid;
     } catch (error) {
-      throw new Error(`Rule validation failed: ${(error as Error).message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Error in async operation '${compiledRule.original.op}' on field '${compiledRule.original.field}': ${errorMessage}`);
     }
   }
 
@@ -450,5 +551,34 @@ export class ValidraEngine {
     if (this.options.debug) {
       this.logger.debug(messageFactory(), data);
     }
+  }
+
+  /**
+   * Get path segments with LRU cache for better performance
+   */
+  private getPathSegments(path: string): string[] {
+    // LRU cache management
+    if (this.pathCache.has(path)) {
+      const segments = this.pathCache.get(path)!;
+      // Move to end for LRU
+      this.pathCache.delete(path);
+      this.pathCache.set(path, segments);
+      return segments;
+    }
+
+    // Split path into segments
+    const segments = path.includes('.') ? path.split('.') : [path];
+
+    // Cache size management
+    if (this.pathCache.size >= ValidraEngine.MAX_PATH_CACHE_SIZE) {
+      // Remove least recently used (first entry)
+      const firstKey = this.pathCache.keys().next().value;
+      if (firstKey !== undefined) {
+        this.pathCache.delete(firstKey);
+      }
+    }
+
+    this.pathCache.set(path, segments);
+    return segments;
   }
 }
