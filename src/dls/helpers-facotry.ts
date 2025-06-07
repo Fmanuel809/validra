@@ -350,6 +350,14 @@ const AVAILABLE_HELPERS = [
 ] as const;
 
 /**
+ * Optimized Map for O(1) helper lookups
+ * Pre-built Map containing all helpers for fast access
+ */
+const HELPERS_MAP = new Map(
+  AVAILABLE_HELPERS.map((helper) => [helper.name, helper])
+);
+
+/**
  * Union type representing all available helper names.
  *
  * This type is dynamically derived from the AVAILABLE_HELPERS array,
@@ -461,13 +469,14 @@ export const helpersActions = {
   getHelperResolverSchema: <T extends HelperName>(
     helperName: T
   ): HelperResolverSchema => {
-    const helper = AVAILABLE_HELPERS.find((h) => h.name === helperName);
+    const helper = HELPERS_MAP.get(helperName);
     if (!helper) {
       throw new Error(`Helper with name "${helperName}" not found.`);
     }
     return {
       resolver: helper.resolver,
       async: helper.async,
+      params: helper.params,
     };
   },
 };

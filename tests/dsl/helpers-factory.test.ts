@@ -43,8 +43,10 @@ describe('helpersActions', () => {
       
       expect(schema).toHaveProperty('resolver');
       expect(schema).toHaveProperty('async');
+      expect(schema).toHaveProperty('params');
       expect(typeof schema.resolver).toBe('function');
       expect(typeof schema.async).toBe('boolean');
+      expect(Array.isArray(schema.params)).toBe(true);
     });
 
     it('should throw error for invalid helper name', () => {
