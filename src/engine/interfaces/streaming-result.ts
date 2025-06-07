@@ -8,8 +8,6 @@ export interface StreamingValidationResult<T> {
 }
 
 export interface StreamingValidationOptions {
-  chunkSize?: number;
-  maxConcurrent?: number;
   onChunkComplete?: (result: StreamingValidationResult<any>) => void;
   onComplete?: (summary: StreamingValidationSummary) => void;
 }

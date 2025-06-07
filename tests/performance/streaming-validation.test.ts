@@ -196,7 +196,6 @@ describe('Streaming Validation Performance Tests', () => {
       let processedCount = 0;
 
       for await (const result of engine.validateStream(generateLargeDataset(), {
-        chunkSize: 25,
         onChunkComplete: (result) => {
           // This could be used for progress reporting
           if (result.totalProcessed % 500 === 0) {
@@ -220,10 +219,7 @@ describe('Streaming Validation Performance Tests', () => {
 
   describe('Streaming Validator Direct Usage', () => {
     it('should work with ValidraStreamingValidator directly', async () => {
-      const streamingValidator = new ValidraStreamingValidator({
-        chunkSize: 5,
-        maxConcurrent: 1
-      });
+      const streamingValidator = new ValidraStreamingValidator();
 
       const testData = Array.from({ length: 15 }, (_, i) => ({
         name: `User ${i}`,

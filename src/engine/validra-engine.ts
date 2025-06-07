@@ -53,10 +53,7 @@ export class ValidraEngine {
     this.memoryPool = new ValidraMemoryPool(this.options.memoryPoolSize || 25);
 
     // Initialize Streaming Validator for large datasets
-    this.streamingValidator = new ValidraStreamingValidator({
-      chunkSize: this.options.streamingChunkSize || 100,
-      maxConcurrent: 1
-    });
+    this.streamingValidator = new ValidraStreamingValidator();
 
     // Compile rules for optimization
     this.compiledRules = this.compileRules(rules);
@@ -392,44 +389,6 @@ export class ValidraEngine {
     return result;
   }
 
-  private getHelper(op: string) {
-    // LRU cache management
-    if (this.helperCache.has(op)) {
-      const helper = this.helperCache.get(op);
-      // Move to end for LRU
-      this.helperCache.delete(op);
-      this.helperCache.set(op, helper);
-      return helper;
-    }
-
-    try {
-      // Hacer casting seguro para el tipo esperado por la API
-      const helper = helpersActions.getHelperResolverSchema(op as any);
-      
-      // Cache size management
-      if (this.helperCache.size >= ValidraEngine.MAX_CACHE_SIZE) {
-        // Remove least recently used (first entry)
-        const firstKey = this.helperCache.keys().next().value;
-        if (firstKey !== undefined) {
-          this.helperCache.delete(firstKey);
-        }
-      }
-      
-      this.helperCache.set(op, helper);
-      return helper;
-    } catch (error) {
-      // Si el helper no existe, cachear null para evitar búsquedas repetidas
-      if (this.helperCache.size >= ValidraEngine.MAX_CACHE_SIZE) {
-        const firstKey = this.helperCache.keys().next().value;
-        if (firstKey !== undefined) {
-          this.helperCache.delete(firstKey);
-        }
-      }
-      this.helperCache.set(op, null);
-      return null;
-    }
-  }
-
   /**
    * Optimized getValue with pre-computed path segments and array validation
    */
@@ -573,26 +532,6 @@ export class ValidraEngine {
   }
 
   /**
-   * Apply compiled rule for optimized validation with enhanced error handling
-   */
-  private applyRule(compiledRule: CompiledRule, value: unknown): boolean {
-    try {
-      const { helper, original } = compiledRule;
-      if (!helper) {
-        throw new Error(`Unknown operation: ${original.op}`);
-      }
-      
-      const args = this.buildRuleArguments(compiledRule, value);
-      const isValid = helper.resolver(...args);
-      
-      return original.negative ? !isValid : isValid;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Error in operation '${compiledRule.original.op}' on field '${compiledRule.original.field}': ${errorMessage}`);
-    }
-  }
-
-  /**
    * Apply compiled rule with pre-built arguments for memory pool optimization
    */
   private applyRuleWithArgs(compiledRule: CompiledRule, args: unknown[]): boolean {
@@ -703,8 +642,6 @@ export class ValidraEngine {
     }
 
     const streamingOptions = {
-      chunkSize: this.options.streamingChunkSize || 100,
-      maxConcurrent: 1,
       ...options
     };
 

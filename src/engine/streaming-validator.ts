@@ -5,14 +5,10 @@ import { StreamingValidationResult, StreamingValidationOptions, StreamingValidat
  * Streaming validation for large datasets with constant memory usage
  */
 export class ValidraStreamingValidator<T extends Record<string, any>> {
-  private readonly chunkSize: number;
-  private readonly maxConcurrent: number;
   private readonly onChunkComplete?: (result: StreamingValidationResult<any>) => void;
   private readonly onComplete?: (summary: StreamingValidationSummary) => void;
 
   constructor(options: StreamingValidationOptions = {}) {
-    this.chunkSize = options.chunkSize || 100;
-    this.maxConcurrent = options.maxConcurrent || 1;
     if (options.onChunkComplete) {
       this.onChunkComplete = options.onChunkComplete;
     }
@@ -109,66 +105,10 @@ export class ValidraStreamingValidator<T extends Record<string, any>> {
   }
 
   /**
-   * Process a chunk of data with optional concurrency
-   */
-  private async processChunk<TData extends Record<string, any>>(
-    chunk: TData[],
-    validator: (item: TData) => ValidraResult<TData> | Promise<ValidraResult<TData>>,
-    startIndex: number
-  ): Promise<StreamingValidationResult<TData>[]> {
-    const results: StreamingValidationResult<TData>[] = [];
-
-    if (this.maxConcurrent === 1) {
-      // Sequential processing
-      for (let i = 0; i < chunk.length; i++) {
-        const item = chunk[i];
-        if (!item) continue; // Skip undefined items
-        
-        const validationResult = await validator(item);
-        
-        results.push({
-          chunk: item,
-          index: startIndex + i,
-          isValid: validationResult.isValid,
-          errors: validationResult.errors ? this.convertErrors(validationResult.errors) : {},
-          isComplete: false,
-          totalProcessed: startIndex + i + 1
-        });
-      }
-    } else {
-      // Concurrent processing with limited concurrency
-      const semaphore = new Semaphore(this.maxConcurrent);
-      const promises = chunk.map(async (item, i) => {
-        if (!item) return null; // Skip undefined items
-        
-        await semaphore.acquire();
-        try {
-          const validationResult = await validator(item);
-          return {
-            chunk: item,
-            index: startIndex + i,
-            isValid: validationResult.isValid,
-            errors: validationResult.errors ? this.convertErrors(validationResult.errors) : {},
-            isComplete: false,
-            totalProcessed: startIndex + i + 1
-          };
-        } finally {
-          semaphore.release();
-        }
-      });
-
-      const promiseResults = await Promise.all(promises);
-      results.push(...promiseResults.filter(r => r !== null));
-    }
-
-    return results;
-  }
-
-  /**
    * Convert ValidraResult errors to streaming format
    */
   private convertErrors(errors: any): Record<string, string[]> {
-    if (!errors) return {};
+    if (Object.keys(errors).length === 0) return {};
     
     const converted: Record<string, string[]> = {};
     for (const [key, value] of Object.entries(errors)) {
@@ -192,37 +132,5 @@ export class ValidraStreamingValidator<T extends Record<string, any>> {
         yield item;
       }
     })();
-  }
-}
-
-/**
- * Simple semaphore for controlling concurrency
- */
-class Semaphore {
-  private count: number;
-  private waiting: (() => void)[] = [];
-
-  constructor(count: number) {
-    this.count = count;
-  }
-
-  async acquire(): Promise<void> {
-    if (this.count > 0) {
-      this.count--;
-      return;
-    }
-
-    return new Promise<void>((resolve) => {
-      this.waiting.push(resolve);
-    });
-  }
-
-  release(): void {
-    if (this.waiting.length > 0) {
-      const resolve = this.waiting.shift()!;
-      resolve();
-    } else {
-      this.count++;
-    }
   }
 }
