@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { CollectionChecker } from '../../../src/dls/helpers/collection-checker';
+import { CollectionChecker } from '../../../src/dsl/helpers/collection-checker';
 
 describe('CollectionChecker', () => {
     describe('isEmpty', () => {

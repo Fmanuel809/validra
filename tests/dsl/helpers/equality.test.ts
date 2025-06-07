@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Equality } from "@/dls/helpers/equality";
+import { Equality } from "@/dsl/helpers/equality";
 
 describe("DSL - Equality Helper", () => {
   describe("isEqual", () => {

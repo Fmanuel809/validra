@@ -1,7 +1,9 @@
-import { helpersActions, Helper } from "@/dls";
-import { ValidraCallback, ValidraEngineOptions, ValidraResult } from "./interfaces";
+import { helpersActions, Helper } from "@/dsl";
+import { ValidraCallback, ValidraEngineOptions, ValidraResult, StreamingValidationOptions, StreamingValidationResult, StreamingValidationSummary } from "./interfaces";
 import { Rule } from "./rule";
 import { ValidraLogger } from "@/utils/validra-logger";
+import { ValidraMemoryPool, MemoryPoolFactories } from "./memory-pool";
+import { ValidraStreamingValidator } from "./streaming-validator";
 
 /**
  * Interface for compiled rules with pre-computed data
@@ -21,6 +23,8 @@ export class ValidraEngine {
   private pathCache = new Map<string, string[]>();
   private compiledRules: CompiledRule[] = [];
   private logger: ValidraLogger;
+  private memoryPool: ValidraMemoryPool;
+  private streamingValidator: ValidraStreamingValidator<any>;
   private static readonly MAX_CACHE_SIZE = 100;
   private static readonly MAX_PATH_CACHE_SIZE = 50;
 
@@ -35,11 +39,24 @@ export class ValidraEngine {
       debug: false,
       throwOnUnknownField: false,
       allowPartialValidation: false,
+      enableMemoryPool: true,
+      memoryPoolSize: 25, // Smaller default size to reduce overhead
+      enableStreaming: false,
+      streamingChunkSize: 100,
       ...options
     };
 
     // Initialize logger
     this.logger = new ValidraLogger("ValidraEngine");
+
+    // Initialize Memory Pool for high-frequency scenarios
+    this.memoryPool = new ValidraMemoryPool(this.options.memoryPoolSize || 25);
+
+    // Initialize Streaming Validator for large datasets
+    this.streamingValidator = new ValidraStreamingValidator({
+      chunkSize: this.options.streamingChunkSize || 100,
+      maxConcurrent: 1
+    });
 
     // Compile rules for optimization
     this.compiledRules = this.compileRules(rules);
@@ -50,7 +67,9 @@ export class ValidraEngine {
     this.logger.info(`Engine initialized with ${rules.length} rules`, {
       debug: this.options.debug,
       rulesCount: rules.length,
-      callbacksCount: callbacks.length
+      callbacksCount: callbacks.length,
+      memoryPoolEnabled: this.options.enableMemoryPool,
+      streamingEnabled: this.options.enableStreaming
     });
   }
 
@@ -91,6 +110,7 @@ export class ValidraEngine {
 
   /**
    * Build arguments array for rule execution with parameter validation
+   * Uses memory pool only for larger arrays to avoid overhead
    */
   private buildRuleArguments(compiledRule: CompiledRule, value: unknown): unknown[] {
     const { helper, original } = compiledRule;
@@ -102,8 +122,15 @@ export class ValidraEngine {
     const params = (original as any).params || {};
     const paramCount = helper.params.length;
     
-    // Pre-allocate arguments array for better performance
-    const args = new Array(1 + paramCount);
+    // Only use memory pool for larger argument arrays (> 1 parameter)
+    // AND when validation frequency is expected to be high
+    const shouldUsePool = this.options.enableMemoryPool && paramCount > 1;
+    const args = shouldUsePool
+      ? this.memoryPool.get('argumentsArray', MemoryPoolFactories.argumentsArray)
+      : new Array(1 + paramCount);
+    
+    // Ensure proper size
+    args.length = 1 + paramCount;
     args[0] = value;
     
     // Build arguments array based on helper.params with validation
@@ -119,6 +146,16 @@ export class ValidraEngine {
     }
     
     return args;
+  }
+
+  /**
+   * Return arguments array to memory pool only if it was pooled
+   */
+  private returnArgumentsArray(args: unknown[]): void {
+    // Only return to pool if it was large enough to be pooled (> 2 parameters)
+    if (this.options.enableMemoryPool && args.length > 3) {
+      this.memoryPool.return('argumentsArray', args, MemoryPoolFactories.resetArgumentsArray);
+    }
   }
 
   /**
@@ -181,27 +218,43 @@ export class ValidraEngine {
     }
 
     const { failFast = false, maxErrors = Infinity } = options || {};
-    const result: ValidraResult<T> = {
-      isValid: true,
-      data: data,
-      errors: {}
-    };
+    
+    // Use memory pool for result object only in high-frequency scenarios
+    // For simple validations, regular object creation is faster
+    let result: ValidraResult<T>;
+    const shouldPoolResult = this.options.enableMemoryPool && this.compiledRules.length > 2;
+    
+    if (shouldPoolResult) {
+      const pooledResult = this.memoryPool.get('validationResult', MemoryPoolFactories.validationResult);
+      result = {
+        isValid: true,
+        data: data,
+        errors: pooledResult.errors || {}
+      };
+    } else {
+      result = { isValid: true, data: data, errors: {} };
+    }
+    
     let errorCount = 0;
 
     this.debugLog(() => `Starting validation with ${this.compiledRules.length} rules`, {
       failFast,
       maxErrors,
-      dataKeys: Object.keys(data)
+      dataKeys: Object.keys(data),
+      memoryPoolEnabled: this.options.enableMemoryPool
     });
 
     for (const compiledRule of this.compiledRules) {
+      let args: unknown[] | null = null;
       try {
         const value = this.getValue(data, compiledRule.pathSegments);
         
         // Validar campo desconocido si está habilitado
         this.validateUnknownField(compiledRule, value);
         
-        const isValid = this.applyRule(compiledRule, value);
+        // Build arguments with memory pool optimization
+        args = this.buildRuleArguments(compiledRule, value);
+        const isValid = this.applyRuleWithArgs(compiledRule, args);
 
         this.debugLog(() => 
           `Rule ${compiledRule.original.op} on field ${compiledRule.original.field}: ${isValid ? 'PASS' : 'FAIL'}`,
@@ -252,7 +305,22 @@ export class ValidraEngine {
     // Ejecutar callback si se proporciona
     this.executeCallback(callback, result);
 
-    return result;
+    // Create a clean result copy to return (avoiding memory pool reference issues)
+    const finalResult: ValidraResult<T> = {
+      isValid: result.isValid,
+      data: result.data
+    };
+    
+    if (result.errors) {
+      finalResult.errors = result.errors;
+    }
+
+    // Return result to memory pool if it was pooled
+    if (shouldPoolResult) {
+      this.memoryPool.return('validationResult', result, MemoryPoolFactories.resetValidationResult);
+    }
+
+    return finalResult;
   }
 
   public async validateAsync<T extends Record<string, any>>(
@@ -525,6 +593,31 @@ export class ValidraEngine {
   }
 
   /**
+   * Apply compiled rule with pre-built arguments for memory pool optimization
+   */
+  private applyRuleWithArgs(compiledRule: CompiledRule, args: unknown[]): boolean {
+    try {
+      const { helper, original } = compiledRule;
+      if (!helper) {
+        throw new Error(`Unknown operation: ${original.op}`);
+      }
+      
+      const isValid = helper.resolver(...args);
+      
+      // Return arguments to pool if enabled
+      this.returnArgumentsArray(args);
+      
+      return original.negative ? !isValid : isValid;
+    } catch (error) {
+      // Return arguments to pool even on error
+      this.returnArgumentsArray(args);
+      
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Error in operation '${compiledRule.original.op}' on field '${compiledRule.original.field}': ${errorMessage}`);
+    }
+  }
+
+  /**
    * Apply compiled rule for optimized async validation with enhanced error handling
    */
   private async applyRuleAsync(compiledRule: CompiledRule, value: unknown): Promise<boolean> {
@@ -580,5 +673,84 @@ export class ValidraEngine {
 
     this.pathCache.set(path, segments);
     return segments;
+  }
+
+  /**
+   * Get memory pool metrics for monitoring
+   */
+  public getMemoryPoolMetrics() {
+    return this.memoryPool.getMetrics();
+  }
+
+  /**
+   * Clear memory pool (useful for testing or memory management)
+   */
+  public clearMemoryPool(): void {
+    this.memoryPool.clear();
+  }
+
+  /**
+   * Validate large datasets using streaming for constant memory usage
+   */
+  public async* validateStream<TData extends Record<string, any>>(
+    dataStream: Iterable<TData> | AsyncIterable<TData>,
+    options?: StreamingValidationOptions
+  ): AsyncGenerator<StreamingValidationResult<TData>, StreamingValidationSummary, unknown> {
+    if (!this.options.enableStreaming) {
+      this.logger.warn('Streaming validation is not enabled', {
+        message: 'Enable streaming in engine options for better performance'
+      });
+    }
+
+    const streamingOptions = {
+      chunkSize: this.options.streamingChunkSize || 100,
+      maxConcurrent: 1,
+      ...options
+    };
+
+    const validator = new ValidraStreamingValidator<TData>(streamingOptions);
+
+    // Create a validation function that uses this engine
+    const validateItem = (item: TData): ValidraResult<TData> => {
+      return this.validate(item);
+    };
+
+    // Convert array to iterable if needed
+    const stream = Array.isArray(dataStream) 
+      ? ValidraStreamingValidator.createArrayStream(dataStream)
+      : dataStream;
+
+    // Delegate to streaming validator
+    return yield* validator.validateStream(stream, validateItem);
+  }
+
+  /**
+   * Validate an array of data with streaming optimization
+   */
+  public async validateArray<TData extends Record<string, any>>(
+    dataArray: TData[],
+    options?: StreamingValidationOptions & { returnSummaryOnly?: boolean }
+  ): Promise<StreamingValidationSummary | StreamingValidationResult<TData>[]> {
+    const results: StreamingValidationResult<TData>[] = [];
+    let summary: StreamingValidationSummary | null = null;
+
+    // Use streaming validation
+    const stream = ValidraStreamingValidator.createArrayStream(dataArray);
+    
+    const streamGenerator = this.validateStream(stream, options);
+    let streamResult = await streamGenerator.next();
+    
+    while (!streamResult.done) {
+      const result = streamResult.value;
+      if (!options?.returnSummaryOnly) {
+        results.push(result);
+      }
+      streamResult = await streamGenerator.next();
+    }
+    
+    // The final value is the summary
+    summary = streamResult.value;
+
+    return options?.returnSummaryOnly ? summary : results;
   }
 }

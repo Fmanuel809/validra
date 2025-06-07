@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { TypeChecker } from '../../../src/dls/helpers/type-checker';
+import { TypeChecker } from '../../../src/dsl/helpers/type-checker';
 
 describe('TypeChecker', () => {
     describe('isString', () => {

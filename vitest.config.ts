@@ -6,7 +6,7 @@ export default defineConfig({
     alias: {
       '@': resolve(__dirname, './src'),
       '@/core': resolve(__dirname, './src/core'),
-      '@/dls': resolve(__dirname, './src/dls'),
+      '@/dsl': resolve(__dirname, './src/dsl'),
       '@/operations': resolve(__dirname, './src/operations'),
       '@/utils': resolve(__dirname, './src/utils')
     }

@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { StringChecker } from '../../../src/dls/helpers/string-checker';
+import { StringChecker } from '../../../src/dsl/helpers/string-checker';
 
 describe('StringChecker', () => {
     describe('isEmpty', () => {

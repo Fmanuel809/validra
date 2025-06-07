@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { helpersActions } from '../../src/dls/helpers-facotry';
+import { helpersActions } from '../../src/dsl/helpers-facotry';
 
 describe('helpersActions', () => {
   describe('getHelpers()', () => {

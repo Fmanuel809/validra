@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { Comparison } from '../../../src/dls/helpers/comparison';
+import { Comparison } from '../../../src/dsl/helpers/comparison';
 
 describe('Comparison', () => {
     describe('isGreaterThan', () => {

@@ -45,3 +45,5 @@ pids
 # Temporary folders
 tmp/
 temp/
+
+data/

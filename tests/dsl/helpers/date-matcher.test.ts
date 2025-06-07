@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { DateMatcher } from '../../../src/dls/helpers/date-matcher';
+import { DateMatcher } from '../../../src/dsl/helpers/date-matcher';
 
 describe('DateMatcher', () => {
     let fixedDate: Date;
