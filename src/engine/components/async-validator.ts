@@ -45,7 +45,7 @@ export class AsyncValidator implements IAsyncValidator {
 
             // Execute the rule using the helper
             const isValid = compiledRule.helper.apply(null, [value, ...args]);
-            resolve(Boolean(isValid));
+            resolve(Boolean(rule.negative ? !isValid : isValid));
           } catch (error) {
             reject(error);
           }
@@ -84,9 +84,15 @@ export class AsyncValidator implements IAsyncValidator {
           const pathSegments = this.dataExtractor.getPathSegments(pathKey);
           const value = this.dataExtractor.getValue(data, pathSegments);
 
-          // Prepare arguments
-          const args = this.memoryPoolManager.get('argumentsArray', () => []);
+          // Get a reusable arguments array for helper params
+          const args = this.memoryPoolManager.get('argumentsArray', () => []) as unknown[];
           args.length = 0; // Clear array
+          // Extract params from rule into args
+          const ruleParams = (compiledRule.original as any).params;
+          if (ruleParams !== undefined && ruleParams !== null) {
+            const values = Object.values(ruleParams) as unknown[];
+            args.push(...values);
+          }
 
           // Apply rule asynchronously
           const isValid = await this.applyRuleAsync(compiledRule.original, value, args);

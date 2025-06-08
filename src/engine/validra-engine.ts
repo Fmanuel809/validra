@@ -119,11 +119,14 @@ export class ValidraEngine {
 
     this.syncValidator =
       dependencies?.syncValidator ??
-      new SyncValidator({
-        debug: this.options.debug,
-        allowPartialValidation: this.options.allowPartialValidation,
-        throwOnUnknownField: this.options.throwOnUnknownField,
-      });
+      new SyncValidator(
+        {
+          debug: this.options.debug,
+          allowPartialValidation: this.options.allowPartialValidation,
+          throwOnUnknownField: this.options.throwOnUnknownField,
+        },
+        this.dataExtractor,
+      );
 
     this.asyncValidator =
       dependencies?.asyncValidator ?? new AsyncValidator(this.ruleCompiler, this.dataExtractor, this.memoryPoolManager);
@@ -183,6 +186,9 @@ export class ValidraEngine {
 
       const duration = performance.now() - startTime;
       this.logValidationComplete(duration, result, false);
+      if (result.errors && Object.keys(result.errors).length === 0) {
+        delete result.errors; // Clean up errors to avoid memory leaks
+      }
 
       return result;
     } catch (error) {
@@ -227,6 +233,10 @@ export class ValidraEngine {
 
       const duration = performance.now() - startTime;
       this.logValidationComplete(duration, result, true);
+
+      if (result.errors && Object.keys(result.errors).length === 0) {
+        delete result.errors; // Clean up errors to avoid memory leaks
+      }
 
       return result;
     } catch (error) {

@@ -1,5 +1,6 @@
 import { helpersActions } from '@/dsl';
 import { ValidraLogger } from '@/utils/validra-logger';
+import { IDataExtractor } from '../interfaces/data-extractor.interface';
 import { ISyncValidator } from '../interfaces/validators.interface';
 import { ValidraResult } from '../interfaces/validra-result';
 import { Rule } from '../rule';
@@ -19,14 +20,19 @@ export class SyncValidator implements ISyncValidator {
     allowPartialValidation?: boolean;
     throwOnUnknownField?: boolean;
   };
+  private readonly dataExtractor: IDataExtractor;
 
   /**
    * Creates a new SyncValidator instance.
    * @param options Optional configuration for debugging, partial validation, and error handling.
    */
-  constructor(options: { debug?: boolean; allowPartialValidation?: boolean; throwOnUnknownField?: boolean } = {}) {
+  constructor(
+    options: { debug?: boolean; allowPartialValidation?: boolean; throwOnUnknownField?: boolean } = {},
+    dataExtractor: IDataExtractor,
+  ) {
     this.logger = new ValidraLogger('SyncValidator');
     this.options = options;
+    this.dataExtractor = dataExtractor;
   }
 
   /**
@@ -47,7 +53,8 @@ export class SyncValidator implements ISyncValidator {
         throw new Error(`Unknown operation: ${rule.op}`);
       }
 
-      const isValid = helper.resolver(...args);
+      // Pass the extracted value as the first argument to the helper
+      const isValid = helper.resolver(value, ...args);
 
       // Apply negative logic if specified
       return rule.negative ? !isValid : isValid;
@@ -100,9 +107,14 @@ export class SyncValidator implements ISyncValidator {
 
     for (const rule of rules) {
       try {
-        // Note: This method expects pre-built arguments and value extraction
-        // to be handled by the calling ValidraEngine
-        const isValid = this.applyRule(rule, undefined, []); // Placeholder - actual implementation will be injected
+        // Extract field value and parameters
+        const pathSegments = this.dataExtractor.getPathSegments(rule.field);
+        const value = this.dataExtractor.getValue(data, pathSegments);
+        let args: unknown[] = [];
+        if ('params' in rule && (rule as any).params !== undefined) {
+          args = Object.values((rule as any).params);
+        }
+        const isValid = this.applyRule(rule, value, args);
 
         if (!isValid) {
           result.isValid = false;
