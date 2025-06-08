@@ -26,12 +26,11 @@ export class AsyncValidator implements IAsyncValidator {
    * Applies a single rule asynchronously to a value
    */
   async applyRuleAsync(rule: Rule, value: unknown, args: unknown[]): Promise<boolean> {
+    console.debug(`Applying rule: ${rule} with value:`, value, 'and args:', args);
     return new Promise((resolve, reject) => {
       try {
-        // Simulate async execution
         setTimeout(() => {
           try {
-            // Get compiled rules
             const compiledRules = this.ruleCompiler.compile([rule]);
             if (compiledRules.length === 0) {
               resolve(false);
@@ -42,10 +41,18 @@ export class AsyncValidator implements IAsyncValidator {
               resolve(false);
               return;
             }
-
-            // Execute the rule using the helper
-            const isValid = compiledRule.helper.apply(null, [value, ...args]);
-            resolve(Boolean(rule.negative ? !isValid : isValid));
+            // Ejecutar el helper y soportar helpers asíncronos
+            const result = compiledRule.helper.apply(null, [value, ...args]);
+            if (result && typeof result.then === 'function') {
+              // Es una promesa
+              result
+                .then((isValid: boolean) => {
+                  resolve(Boolean(rule.negative ? !isValid : isValid));
+                })
+                .catch(reject);
+            } else {
+              resolve(Boolean(rule.negative ? !result : result));
+            }
           } catch (error) {
             reject(error);
           }

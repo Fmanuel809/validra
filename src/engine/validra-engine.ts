@@ -355,7 +355,13 @@ export class ValidraEngine {
    * @internal
    */
   private validateInputData(data: any): void {
-    if (!data || typeof data !== 'object') {
+    if (
+      !data ||
+      typeof data !== 'object' ||
+      Array.isArray(data) ||
+      data instanceof Date ||
+      typeof data === 'function'
+    ) {
       const error = new Error('Data must be a valid object');
       this.errorHandler.handleError(error, {
         metadata: { data },

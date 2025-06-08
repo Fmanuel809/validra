@@ -41,6 +41,8 @@ export class CallbackManager<T extends Record<string, any> = Record<string, any>
    * Registers validation callbacks with options
    */
   registerCallbacks(callbacks: ValidationCallbacks<T>, options: CallbackOptions = {}): string {
+    // Asegura que callbacks nunca sea undefined
+    callbacks = callbacks || {};
     const id = this.generateCallbackId();
     const registration: CallbackRegistration<T> = {
       id,
@@ -210,6 +212,10 @@ export class CallbackManager<T extends Record<string, any> = Record<string, any>
     const registrations = Array.from(this.registrations.values());
 
     for (const registration of registrations) {
+      // Verifica que callbacks sea un objeto
+      if (!registration.callbacks || typeof registration.callbacks !== 'object') {
+        continue;
+      }
       const callback = registration.callbacks[eventType];
       if (!callback) {
         continue;
@@ -251,7 +257,10 @@ export class CallbackManager<T extends Record<string, any> = Record<string, any>
       return new Promise<void>(resolve => {
         const timer = setTimeout(async () => {
           this.debounceTimers.delete(key);
-          await this.executeCallbackDirect(registration, callback, args);
+          // Only execute if the registration still exists
+          if (this.registrations.has(registration.id)) {
+            await this.executeCallbackDirect(registration, callback, args);
+          }
           resolve();
         }, options.debounceMs);
 
