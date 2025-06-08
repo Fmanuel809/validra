@@ -117,7 +117,14 @@ export class DataExtractor implements IDataExtractor {
    *
    * @returns Object containing cacheHits, cacheMisses, and totalExtractions counts
    */
-  public getMetrics(): { cacheHits: number; cacheMisses: number; totalExtractions: number } {
+  public getMetrics(): {
+    /** Number of cache hits for path extraction. */
+    cacheHits: number;
+    /** Number of cache misses for path extraction. */
+    cacheMisses: number;
+    /** Total number of extraction operations performed. */
+    totalExtractions: number;
+  } {
     return {
       cacheHits: this.cacheHits,
       cacheMisses: this.cacheMisses,

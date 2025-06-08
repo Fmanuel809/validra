@@ -10,6 +10,12 @@ import { Rule } from '../rule';
  * Implements IAsyncValidator interface following SOLID principles
  */
 export class AsyncValidator implements IAsyncValidator {
+  /**
+   * Creates a new AsyncValidator instance.
+   * @param ruleCompiler The rule compiler to use for compiling rules.
+   * @param dataExtractor The data extractor for value extraction.
+   * @param memoryPoolManager The memory pool manager for object reuse.
+   */
   constructor(
     private readonly ruleCompiler: IRuleCompiler,
     private readonly dataExtractor: IDataExtractor,

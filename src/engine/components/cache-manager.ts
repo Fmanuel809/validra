@@ -17,6 +17,10 @@ export class CacheManager implements ICacheManager {
   private pathHits = 0;
   private pathMisses = 0;
 
+  /**
+   * Creates a new CacheManager instance.
+   * @param config Optional cache configuration.
+   */
   constructor(config: CacheConfig = {}) {
     this.config = {
       maxPathCacheSize: config.maxPathCacheSize ?? 50,

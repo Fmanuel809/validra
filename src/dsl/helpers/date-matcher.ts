@@ -1,10 +1,13 @@
-/**
- * @fileoverview Provides comprehensive date comparison and validation utilities
- * @module DateMatcher
- * @version 1.0.0
- * @author Felix M. Martinez
- * @since 1.0.0
- */
+// Provides comprehensive date comparison and validation utilities for Validra.
+// Author: Felix M. Martinez
+//
+// This module exports the DateMatcher class with static methods for date operations.
+//
+// Example usage:
+//   DateMatcher.isAfter(new Date('2025-01-01'), new Date('2024-12-31'));
+//   DateMatcher.isLeapYear(new Date('2024-01-01'));
+//
+// Version: 1.0.0
 
 import { TypeChecker } from './type-checker';
 
@@ -33,7 +36,6 @@ export class DateMatcher {
    * Uses millisecond timestamps for comparison, which are timezone-independent.
    *
    * @public
-   * @static
    * @param {Date} date - The date to check
    * @param {Date} reference - The reference date to compare against
    * @returns {boolean} True if date is after the reference date, false otherwise
@@ -64,7 +66,6 @@ export class DateMatcher {
    * Uses millisecond timestamps for comparison, which are timezone-independent.
    *
    * @public
-   * @static
    * @param {Date} date - The date to check
    * @param {Date} reference - The reference date to compare against
    * @returns {boolean} True if date is before the reference date, false otherwise
@@ -95,7 +96,6 @@ export class DateMatcher {
    * Compares only the date portion (year, month, day) in UTC, ignoring time and timezone.
    *
    * @public
-   * @static
    * @param {Date} date - The date to check
    * @returns {boolean} True if the date is today in UTC, false otherwise
    * @throws {Error} Throws if date is not a valid Date instance
@@ -131,7 +131,6 @@ export class DateMatcher {
    * Uses UTC date to avoid timezone-related issues.
    *
    * @public
-   * @static
    * @param {Date} date - The date to check
    * @returns {boolean} True if the date is a Saturday or Sunday in UTC, false otherwise
    * @throws {Error} Throws if date is not a valid Date instance
@@ -159,7 +158,6 @@ export class DateMatcher {
    * Uses UTC date to avoid timezone-related issues.
    *
    * @public
-   * @static
    * @param {Date} date - The date to check
    * @returns {boolean} True if the date is Monday through Friday in UTC, false otherwise
    * @throws {Error} Throws if date is not a valid Date instance
@@ -189,7 +187,6 @@ export class DateMatcher {
    * unless they are also divisible by 400. Uses UTC year to avoid timezone issues.
    *
    * @public
-   * @static
    * @param {Date} date - The date whose year to check
    * @returns {boolean} True if the year is a leap year, false otherwise
    * @throws {Error} Throws if date is not a valid Date instance

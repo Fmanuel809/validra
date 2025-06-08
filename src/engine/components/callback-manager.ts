@@ -29,6 +29,10 @@ export class CallbackManager<T extends Record<string, any> = Record<string, any>
   private readonly logger: ValidraLogger;
   private readonly debounceTimers = new Map<string, NodeJS.Timeout>();
 
+  /**
+   * Creates a new CallbackManager instance.
+   * @param logger Optional logger for callback events.
+   */
   constructor(logger?: ValidraLogger) {
     this.logger = logger || new ValidraLogger('error');
   }

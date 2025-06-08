@@ -26,6 +26,11 @@ export class MemoryPoolManager implements IMemoryPoolManager {
     resetArgumentsArray: MemoryPoolFactories.resetArgumentsArray,
   };
 
+  /**
+   * Creates a new MemoryPoolManager instance.
+   * @param enabled Whether the memory pool is enabled.
+   * @param poolSize The initial size of the memory pool.
+   */
   constructor(enabled: boolean = true, poolSize: number = 25) {
     this.enabled = enabled;
     this.memoryPool = new ValidraMemoryPool(poolSize);

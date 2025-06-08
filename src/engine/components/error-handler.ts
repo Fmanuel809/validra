@@ -29,6 +29,11 @@ export class ErrorHandler implements IErrorHandler {
     transformErrors: true,
   };
 
+  /**
+   * Creates a new ErrorHandler instance.
+   * @param logger Optional logger for error events.
+   * @param options Optional error handling configuration.
+   */
   constructor(logger?: ValidraLogger, options?: ErrorHandlingOptions) {
     this.logger = logger || new ValidraLogger('error');
     if (options) {
@@ -258,7 +263,7 @@ export class ErrorHandler implements IErrorHandler {
       try {
         if (strategy.canRecover(error)) {
           const recovered = await Promise.race([
-            strategy.recover(error, error.context),
+            strategy.recover(error),
             new Promise<boolean>((_, reject) =>
               setTimeout(() => reject(new Error('Recovery timeout')), strategy.timeout),
             ),

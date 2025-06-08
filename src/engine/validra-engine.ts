@@ -30,10 +30,19 @@ import { StreamValidator } from './components/stream-validator';
 import { SyncValidator } from './components/sync-validator';
 
 /**
- * ValidraEngine using Dependency Injection and SOLID Principles
+ * Main validation engine for Validra.
  *
- * This version uses a composition of specialized components, each following
- * Single Responsibility Principle, replacing the original monolithic implementation.
+ * Uses dependency injection and SOLID principles to compose validators,
+ * memory managers, cache, callbacks, and error handling.
+ *
+ * @remarks
+ * Supports synchronous, asynchronous, and streaming validation, as well as metrics and resource cleanup.
+ *
+ * @example
+ * const engine = new ValidraEngine(rules);
+ * const result = engine.validate({ foo: 'bar' });
+ *
+ * @category Engine
  */
 export class ValidraEngine {
   private readonly rules: Rule[];
@@ -41,7 +50,6 @@ export class ValidraEngine {
   private readonly options: Required<ValidraEngineOptions>;
   private readonly logger: ValidraLogger;
 
-  // Injected components following Dependency Inversion Principle
   private readonly ruleCompiler: IRuleCompiler;
   private readonly dataExtractor: IDataExtractor;
   private readonly memoryPoolManager: IMemoryPoolManager;
@@ -52,11 +60,18 @@ export class ValidraEngine {
   private readonly errorHandler: IErrorHandler;
   private readonly cacheManager: ICacheManager;
 
+  /**
+   * Creates a new instance of the validation engine.
+   *
+   * @param rules - Validation rules to apply.
+   * @param callbacks - Custom callbacks for validation events.
+   * @param options - Engine configuration options.
+   * @param dependencies - Injectable dependencies for testing or advanced customization.
+   */
   constructor(
     rules: Rule[],
     callbacks: ValidraCallback[] = [],
     options: ValidraEngineOptions = {},
-    // Optional dependency injection for testing
     dependencies?: {
       ruleCompiler?: IRuleCompiler;
       dataExtractor?: IDataExtractor;
@@ -131,7 +146,14 @@ export class ValidraEngine {
   }
 
   /**
-   * Synchronous validation using composition pattern
+   * Synchronously validates data.
+   *
+   * @typeParam T - Type of the data to validate.
+   * @param data - Data object to validate.
+   * @param callback - Callback to execute after validation completes.
+   * @param options - Validation options (failFast, maxErrors).
+   * @returns Validation result.
+   * @throws Error if the data is invalid or a validation error occurs.
    */
   public validate<T extends Record<string, any>>(
     data: T,
@@ -173,7 +195,13 @@ export class ValidraEngine {
   }
 
   /**
-   * Asynchronous validation using composition pattern
+   * Asynchronously validates data.
+   *
+   * @typeParam T - Type of the data to validate.
+   * @param data - Data object to validate.
+   * @param callback - Callback to execute after validation completes.
+   * @returns Promise with the validation result.
+   * @throws Error if the data is invalid or a validation error occurs.
    */
   public async validateAsync<T extends Record<string, any>>(
     data: T,
@@ -211,7 +239,14 @@ export class ValidraEngine {
   }
 
   /**
-   * Streaming validation for large datasets
+   * Asynchronously validates a data stream, useful for large volumes.
+   *
+   * @typeParam TData - Type of the data to validate in the stream.
+   * @param dataStream - Iterable or AsyncIterable of data objects to validate.
+   * @param options - Streaming validation options.
+   * @yields Partial validation results for each chunk.
+   * @returns A final summary of the validation after the stream ends.
+   * @throws Error if an error occurs during validation.
    */
   public async *validateStream<TData extends Record<string, any>>(
     dataStream: Iterable<TData> | AsyncIterable<TData>,
@@ -239,23 +274,35 @@ export class ValidraEngine {
   }
 
   /**
-   * Get comprehensive metrics from all components
+   * Returns usage and performance metrics from internal engine components.
+   *
+   * @returns An object with metrics for compiler, extractor, memory, cache, errors, and callbacks.
    */
   public getMetrics() {
     return {
+      /** Rule compiler metrics. */
       ruleCompiler: this.ruleCompiler.getMetrics(),
+      /** Data extractor metrics. */
       dataExtractor: this.dataExtractor.getMetrics(),
+      /** Memory pool metrics. */
       memoryPool: this.memoryPoolManager.getMetrics(),
+      /** Cache manager metrics. */
       cache: this.cacheManager.getMetrics(),
+      /** Error handler metrics. */
       errorHandler: this.errorHandler.getStatistics(),
+      /** Callback manager metrics. */
       callbackManager: {
+        /** Number of active callbacks. */
         activeCallbacks: this.callbackManager.getActiveCallbackCount(),
       },
     };
   }
 
   /**
-   * Clear all caches and pools for memory management
+   * Clears all caches and memory pools for resource management.
+   *
+   * @remarks
+   * Useful for freeing resources in long-running processes or tests.
    */
   public clearCaches(): void {
     this.cacheManager.clear();
@@ -264,22 +311,12 @@ export class ValidraEngine {
     this.ruleCompiler.clearCache();
   }
 
-  /**
-   * Get memory pool metrics (backward compatibility)
-   */
-  public getMemoryPoolMetrics() {
-    return this.memoryPoolManager.getMetrics();
-  }
-
-  /**
-   * Clear memory pool (backward compatibility)
-   */
-  public clearMemoryPool(): void {
-    this.memoryPoolManager.clear();
-  }
-
   // Private helper methods
 
+  /**
+   * Initializes internal components, registers callbacks, and preloads helpers.
+   * @internal
+   */
   private initializeComponents(): void {
     // Register callbacks with callback manager
     for (const callback of this.callbacks) {
@@ -301,6 +338,12 @@ export class ValidraEngine {
     });
   }
 
+  /**
+   * Validates that the input data is a valid object.
+   * @param data - The data to validate.
+   * @throws Error if the data is not a valid object.
+   * @internal
+   */
   private validateInputData(data: any): void {
     if (!data || typeof data !== 'object') {
       const error = new Error('Data must be a valid object');
@@ -311,6 +354,14 @@ export class ValidraEngine {
     }
   }
 
+  /**
+   * Executes a callback after synchronous validation.
+   * @typeParam T - Type of the validated data.
+   * @param callback - Callback function or name.
+   * @param result - Validation result.
+   * @throws Error if the callback is not found or invalid.
+   * @internal
+   */
   private executeCallback<T extends Record<string, any>>(
     callback: string | ((result: ValidraResult<T>) => void) | undefined,
     result: ValidraResult<T>,
@@ -333,6 +384,14 @@ export class ValidraEngine {
     }
   }
 
+  /**
+   * Executes a callback after asynchronous validation.
+   * @typeParam T - Type of the validated data.
+   * @param callback - Callback function or name.
+   * @param result - Validation result.
+   * @throws Error if the callback is not found or invalid.
+   * @internal
+   */
   private async executeCallbackAsync<T extends Record<string, any>>(
     callback: string | ((result: ValidraResult<T>) => void | Promise<void>) | undefined,
     result: ValidraResult<T>,
@@ -355,6 +414,13 @@ export class ValidraEngine {
     }
   }
 
+  /**
+   * Logs validation completion time and warnings for slow validations.
+   * @param duration - Time taken for validation in milliseconds.
+   * @param result - Validation result object.
+   * @param isAsync - Whether the validation was asynchronous.
+   * @internal
+   */
   private logValidationComplete(duration: number, result: ValidraResult<any>, isAsync = false): void {
     const type = isAsync ? 'Async validation' : 'Validation';
 

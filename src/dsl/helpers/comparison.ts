@@ -1,15 +1,15 @@
-/**
- * @fileoverview Numerical comparison utilities for the Validra library.
- *
- * This module provides the Comparison class with static methods for performing
- * numerical comparisons including greater than, less than, equal comparisons,
- * and range validations. All methods include proper validation and error handling.
- *
- * @module Comparison
- * @version 1.0.0
- * @author Felix M. Martinez
- * @since 1.0.0
- */
+// Numerical comparison utilities for the Validra library.
+// Author: Felix M. Martinez
+//
+// This module exports the Comparison class with static methods for performing
+// numerical comparisons and range validations.
+//
+// Example usage:
+//   Comparison.isGreaterThan(10, 5);
+//   Comparison.between(5, 1, 10);
+//
+// Version: 1.0.0
+//
 
 import { isNullOrUndefined, isNumber } from '@/utils';
 
@@ -61,7 +61,6 @@ export class Comparison {
    * ```
    *
    * @public
-   * @static
    */
   static isGreaterThan(valueA: number, valueB: number): boolean {
     if (isNullOrUndefined(valueA) || isNullOrUndefined(valueB)) {
@@ -95,7 +94,6 @@ export class Comparison {
    * ```
    *
    * @public
-   * @static
    */
   static isLessThan(valueA: number, valueB: number): boolean {
     if (isNullOrUndefined(valueA) || isNullOrUndefined(valueB)) {
@@ -129,7 +127,6 @@ export class Comparison {
    * ```
    *
    * @public
-   * @static
    */
   static isGreaterThanOrEqual(valueA: number, valueB: number): boolean {
     if (isNullOrUndefined(valueA) || isNullOrUndefined(valueB)) {
@@ -163,7 +160,6 @@ export class Comparison {
    * ```
    *
    * @public
-   * @static
    */
   static isLessThanOrEqual(valueA: number, valueB: number): boolean {
     if (isNullOrUndefined(valueA) || isNullOrUndefined(valueB)) {
@@ -199,7 +195,6 @@ export class Comparison {
    * ```
    *
    * @public
-   * @static
    */
   static between(value: number, min: number, max: number): boolean {
     if (isNullOrUndefined(value) || isNullOrUndefined(min) || isNullOrUndefined(max)) {
@@ -235,7 +230,6 @@ export class Comparison {
    * ```
    *
    * @public
-   * @static
    */
   static notBetween(value: number, min: number, max: number): boolean {
     if (isNullOrUndefined(value) || isNullOrUndefined(min) || isNullOrUndefined(max)) {

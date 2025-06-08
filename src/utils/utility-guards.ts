@@ -1,15 +1,15 @@
-/**
- * @fileoverview Type guard utility functions for validating and checking values.
- *
- * This module provides utility functions to perform runtime type checking
- * and validation of values, particularly for null and undefined checks.
- * Essential utilities for safe value validation throughout the Validra library.
- *
- * @module UtilityGuards
- * @version 1.0.0
- * @author Felix M. Martinez
- * @since 1.0.0
- */
+// Type guard utility functions for validating and checking values in Validra.
+// Author: Felix M. Martinez
+//
+// This module provides utility functions to perform runtime type checking
+// and validation of values, particularly for null and undefined checks.
+//
+// Example usage:
+//   isNullOrUndefined(null);
+//   isNumber(42);
+//
+// Version: 1.0.0
+//
 
 import { flatValues } from './utility.types';
 

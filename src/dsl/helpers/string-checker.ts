@@ -1,10 +1,13 @@
-/**
- * @fileoverview Provides comprehensive string validation and manipulation utilities
- * @module StringChecker
- * @version 1.0.0
- * @author Felix M. Martinez
- * @since 1.0.0
- */
+// Provides comprehensive string validation and manipulation utilities for Validra.
+// Author: Felix M. Martinez
+//
+// This module exports the StringChecker class with static methods for string operations.
+//
+// Example usage:
+//   StringChecker.isEmpty('   ');
+//   StringChecker.isEmail('user@example.com');
+//
+// Version: 1.0.0
 
 import { countGraphemes, isNumber } from '@/utils';
 import { TypeChecker } from './type-checker';
@@ -32,7 +35,6 @@ export class StringChecker {
    * Checks if a string is empty after trimming whitespace.
    *
    * @public
-   * @static
    * @param {string} value - The string to check for emptiness
    * @returns {boolean} True if the string is empty or contains only whitespace, false otherwise
    * @throws {string} Throws if value is not a string
@@ -59,7 +61,6 @@ export class StringChecker {
    * Checks if a string contains a specified substring.
    *
    * @public
-   * @static
    * @param {string} value - The string to search within
    * @param {string} substring - The substring to search for
    * @returns {boolean} True if the substring is found within the value, false otherwise
@@ -87,7 +88,6 @@ export class StringChecker {
    * Checks if a string starts with a specified prefix.
    *
    * @public
-   * @static
    * @param {string} value - The string to check
    * @param {string} prefix - The prefix to check for
    * @returns {boolean} True if the string starts with the prefix, false otherwise
@@ -115,7 +115,6 @@ export class StringChecker {
    * Checks if a string ends with a specified suffix.
    *
    * @public
-   * @static
    * @param {string} value - The string to check
    * @param {string} suffix - The suffix to check for
    * @returns {boolean} True if the string ends with the suffix, false otherwise
@@ -143,7 +142,6 @@ export class StringChecker {
    * Tests if a string matches a regular expression pattern.
    *
    * @public
-   * @static
    * @param {string} value - The string to test against the pattern
    * @param {RegExp} pattern - The regular expression pattern to match
    * @returns {boolean} True if the string matches the pattern, false otherwise
@@ -177,7 +175,6 @@ export class StringChecker {
    * Uses RFC-compliant email pattern for validation.
    *
    * @public
-   * @static
    * @param {string} value - The string to validate as an email
    * @returns {boolean} True if the string is a valid email format, false otherwise
    * @throws {string} Throws if value is not a string
@@ -210,7 +207,6 @@ export class StringChecker {
    * Supports common protocols: http, https, ftp, file, ws, wss, ldap.
    *
    * @public
-   * @static
    * @param {string} value - The string to validate as a URL
    * @returns {boolean} True if the string is a valid URL format, false otherwise
    * @throws {string} Throws if value is not a string
@@ -240,7 +236,6 @@ export class StringChecker {
    * Supports UUID versions 1-5 in standard hyphenated format.
    *
    * @public
-   * @static
    * @param {string} value - The string to validate as a UUID
    * @returns {boolean} True if the string is a valid UUID format, false otherwise
    * @throws {string} Throws if value is not a string
@@ -268,7 +263,6 @@ export class StringChecker {
    * Checks if a string meets the minimum length requirement after trimming whitespace.
    *
    * @public
-   * @static
    * @param {string} value - The string to check
    * @param {number} minLength - The minimum required length (must be non-negative)
    * @returns {boolean} True if the trimmed string length is greater than or equal to minLength, false otherwise
@@ -301,7 +295,6 @@ export class StringChecker {
    * Checks if a string does not exceed the maximum length requirement after trimming whitespace.
    *
    * @public
-   * @static
    * @param {string} value - The string to check
    * @param {number} maxLength - The maximum allowed length (must be non-negative)
    * @returns {boolean} True if the trimmed string length is less than or equal to maxLength, false otherwise

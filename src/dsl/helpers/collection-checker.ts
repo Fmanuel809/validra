@@ -1,10 +1,15 @@
-/**
- * @fileoverview Provides comprehensive collection validation and manipulation utilities
- * @module CollectionChecker
- * @version 1.0.0
- * @author Felix M. Martinez
- * @since 1.0.0
- */
+// Provides comprehensive collection validation and manipulation utilities for Validra.
+// Author: Felix M. Martinez
+//
+// This module exports the CollectionChecker class with static methods for collection operations.
+//
+// All methods are static and can be called without instantiating the class.
+//
+// Example usage:
+//   CollectionChecker.isEmpty([]);
+//   CollectionChecker.hasProperty({ name: 'John' }, 'name');
+//
+// Version: 1.0.0
 
 import { TypeChecker } from './type-checker';
 
@@ -35,7 +40,6 @@ export class CollectionChecker {
    * and no symbol properties.
    *
    * @public
-   * @static
    * @param {any[] | Record<string, any>} collection - The collection to check for emptiness
    * @returns {boolean} True if the collection is empty, false otherwise
    * @throws {string} Throws if the input is neither an array nor an object
@@ -77,7 +81,6 @@ export class CollectionChecker {
    * Uses the 'in' operator to check for property existence, including inherited properties.
    *
    * @public
-   * @static
    * @param {Record<string, any>} value - The object to check for properties
    * @param {string | string[]} prop - The property name(s) to check for
    * @returns {boolean} True if all specified properties exist in the object, false otherwise
@@ -120,7 +123,6 @@ export class CollectionChecker {
    * matches the specified item using strict equality (===).
    *
    * @public
-   * @static
    * @param {any[] | Record<string, any>} collection - The collection to search in
    * @param {any} item - The item to search for
    * @returns {boolean} True if the item is found in the collection, false otherwise

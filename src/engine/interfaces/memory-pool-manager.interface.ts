@@ -1,27 +1,55 @@
 import { ValidraResult } from './validra-result';
 
 /**
- * Memory pool metrics for monitoring performance
+ * Metrics for monitoring memory pool performance.
+ *
+ * @property hits - Number of successful object retrievals from the pool.
+ * @property misses - Number of times an object was not found in the pool.
+ * @property allocations - Number of new objects created.
+ * @property returns - Number of objects returned to the pool.
+ * @property totalRequests - Total number of get requests.
+ * @property hitRate - Percentage of successful retrievals from the pool.
+ * @property poolSizes - Current size of each pool by type.
  */
 export interface MemoryPoolMetrics {
+  /** Number of successful object retrievals from the pool. */
   hits: number;
+  /** Number of times an object was not found in the pool. */
   misses: number;
+  /** Number of new objects created. */
   allocations: number;
+  /** Number of objects returned to the pool. */
   returns: number;
+  /** Total number of get requests. */
   totalRequests: number;
+  /** Percentage of successful retrievals from the pool. */
   hitRate: number;
+  /** Current size of each pool by type. */
   poolSizes: Record<string, number>;
 }
 
 /**
- * Factory functions for creating and resetting pooled objects
+ * Factory functions for creating and resetting pooled objects.
+ *
+ * @property validationResult - Factory for creating a new validation result object.
+ * @property resetValidationResult - Function to reset a validation result object.
+ * @property errorArray - Factory for creating a new error array.
+ * @property resetErrorArray - Function to reset an error array.
+ * @property argumentsArray - Factory for creating a new arguments array.
+ * @property resetArgumentsArray - Function to reset an arguments array.
  */
 export interface PoolFactories {
+  /** Factory for creating a new validation result object. */
   validationResult: () => ValidraResult<any>;
+  /** Function to reset a validation result object. */
   resetValidationResult: (result: ValidraResult<any>) => void;
+  /** Factory for creating a new error array. */
   errorArray: () => string[];
+  /** Function to reset an error array. */
   resetErrorArray: (arr: string[]) => void;
+  /** Factory for creating a new arguments array. */
   argumentsArray: () => unknown[];
+  /** Function to reset an arguments array. */
   resetArgumentsArray: (arr: unknown[]) => void;
 }
 

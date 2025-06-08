@@ -1,3 +1,8 @@
+/**
+ * Barrel file for Validra engine exports.
+ *
+ * @module engine
+ */
 export * from './components';
 export * from './interfaces';
 export * from './memory-pool';

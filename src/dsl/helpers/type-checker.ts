@@ -1,16 +1,13 @@
-/**
- * @fileoverview Runtime type checking utilities for the Validra library.
- *
- * This module provides the TypeChecker class with static methods for performing
- * runtime type validation and type guards. It's designed to work with both
- * JavaScript and TypeScript environments, providing reliable type checking
- * for common data types.
- *
- * @module TypeChecker
- * @version 1.0.0
- * @author Felix M. Martinez
- * @since 1.0.0
- */
+// Runtime type checking utilities for the Validra library.
+// Author: Felix M. Martinez
+//
+// This module exports the TypeChecker class with static methods for type validation and guards.
+//
+// Example usage:
+//   TypeChecker.isString('hello');
+//   TypeChecker.isDate(new Date());
+//
+// Version: 1.0.0
 
 /**
  * Utility class for runtime type checking and validation.
@@ -57,7 +54,6 @@ export class TypeChecker {
    * ```
    *
    * @public
-   * @static
    */
   static isString(value: unknown): boolean {
     return typeof value === 'string' || value instanceof String;
@@ -82,7 +78,6 @@ export class TypeChecker {
    * ```
    *
    * @public
-   * @static
    */
   static isDate(value: unknown): boolean {
     return value instanceof Date;
@@ -108,7 +103,6 @@ export class TypeChecker {
    * ```
    *
    * @public
-   * @static
    */
   static isNumber(value: unknown): boolean {
     return typeof value === 'number' && !isNaN(value);
@@ -134,7 +128,6 @@ export class TypeChecker {
    * ```
    *
    * @public
-   * @static
    */
   static isBoolean(value: unknown): boolean {
     return typeof value === 'boolean';
@@ -160,7 +153,6 @@ export class TypeChecker {
    * ```
    *
    * @public
-   * @static
    */
   static isArray(value: unknown): boolean {
     return Array.isArray(value);
@@ -187,7 +179,6 @@ export class TypeChecker {
    * ```
    *
    * @public
-   * @static
    */
   static isObject(value: unknown): boolean {
     return value !== null && typeof value === 'object' && !Array.isArray(value);

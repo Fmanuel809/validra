@@ -6,38 +6,44 @@
  */
 export interface IDataExtractor {
   /**
-   * Extracts value from data using pre-computed path segments
-   *
-   * @param data - The data object to extract from
-   * @param pathSegments - Pre-computed path segments for navigation
-   * @returns The extracted value or undefined if path doesn't exist
+   * Extracts value from data using pre-computed path segments.
+   * @param data The data object to extract from.
+   * @param pathSegments Pre-computed path segments for navigation.
+   * @returns The extracted value or undefined if path doesn't exist.
    */
   getValue(data: any, pathSegments: string[]): unknown;
 
   /**
-   * Converts a dot-notation path to segments with LRU caching
-   *
-   * @param path - Dot-notation path (e.g., "user.profile.name")
-   * @returns Array of path segments for efficient navigation
+   * Converts a dot-notation path to segments with LRU caching.
+   * @param path Dot-notation path (e.g., "user.profile.name").
+   * @returns Array of path segments for efficient navigation.
    */
   getPathSegments(path: string): string[];
 
   /**
-   * Clears the path cache
+   * Clears the path cache.
    */
   clearCache(): void;
 
   /**
-   * Gets current cache size for monitoring
-   *
-   * @returns Number of cached path segments
+   * Gets current cache size for monitoring.
+   * @returns Number of cached path segments.
    */
   getCacheSize(): number;
 
   /**
-   * Gets performance metrics for the data extractor
-   *
-   * @returns Metrics object with extraction stats
+   * Gets performance metrics for the data extractor.
+   * @returns Metrics object with extraction stats.
+   *   - cacheHits: Number of cache hits for path extraction.
+   *   - cacheMisses: Number of cache misses for path extraction.
+   *   - totalExtractions: Total number of extraction operations performed.
    */
-  getMetrics(): { cacheHits: number; cacheMisses: number; totalExtractions: number };
+  getMetrics(): {
+    /** Number of cache hits for path extraction. */
+    cacheHits: number;
+    /** Number of cache misses for path extraction. */
+    cacheMisses: number;
+    /** Total number of extraction operations performed. */
+    totalExtractions: number;
+  };
 }

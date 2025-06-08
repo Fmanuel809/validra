@@ -9,6 +9,12 @@ import type { ValidraResult } from '../interfaces/validra-result';
  * Optimized for processing large datasets with memory efficiency
  */
 export class StreamValidator implements IStreamValidator {
+  /**
+   * Creates a new StreamValidator instance.
+   * @param ruleCompiler The rule compiler to use for compiling rules.
+   * @param dataExtractor The data extractor for value extraction.
+   * @param memoryPoolManager The memory pool manager for object reuse.
+   */
   constructor(
     private readonly ruleCompiler: IRuleCompiler,
     private readonly dataExtractor: IDataExtractor,

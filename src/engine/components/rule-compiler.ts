@@ -17,6 +17,10 @@ export class RuleCompiler implements IRuleCompiler {
   private cacheHits = 0;
   private cacheMisses = 0;
 
+  /**
+   * Creates a new RuleCompiler instance.
+   * @param logger Optional logger for rule compilation events.
+   */
   constructor(logger?: ValidraLogger) {
     this.logger = logger || new ValidraLogger('error');
   }
@@ -92,7 +96,14 @@ export class RuleCompiler implements IRuleCompiler {
   /**
    * Gets performance metrics for the rule compiler
    */
-  public getMetrics(): { compiledRulesCount: number; cacheHits: number; cacheMisses: number } {
+  public getMetrics(): {
+    /** Number of compiled rules in cache. */
+    compiledRulesCount: number;
+    /** Number of cache hits for rule compilation. */
+    cacheHits: number;
+    /** Number of cache misses for rule compilation. */
+    cacheMisses: number;
+  } {
     return {
       compiledRulesCount: this.compiledRulesCount,
       cacheHits: this.cacheHits,

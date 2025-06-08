@@ -34,11 +34,20 @@ export interface IRuleCompiler {
   compileRules(rules: Rule[]): CompiledRule[];
 
   /**
-   * Gets performance metrics for the rule compiler
-   *
-   * @returns Metrics object with compilation stats
+   * Gets performance metrics for the rule compiler.
+   * @returns An object with the following properties:
+   *   - compiledRulesCount: Number of compiled rules in cache.
+   *   - cacheHits: Number of cache hits for rule compilation.
+   *   - cacheMisses: Number of cache misses for rule compilation.
    */
-  getMetrics(): { compiledRulesCount: number; cacheHits: number; cacheMisses: number };
+  getMetrics(): {
+    /** Number of compiled rules in cache. */
+    compiledRulesCount: number;
+    /** Number of cache hits for rule compilation. */
+    cacheHits: number;
+    /** Number of cache misses for rule compilation. */
+    cacheMisses: number;
+  };
 
   /**
    * Clears internal caches and resets state
@@ -49,19 +58,14 @@ export interface IRuleCompiler {
 /**
  * Represents a rule that has been compiled and optimized for execution.
  *
- * @public
- * @since 1.0.0
+ * @property original - The original rule before compilation.
+ * @property helper - The resolved helper function for this rule.
+ * @property pathSegments - Parsed path segments for field access (e.g., ['user', 'profile', 'email']).
+ * @property hasParams - Whether this rule has parameters that need to be resolved.
  */
 export interface CompiledRule {
-  /** The original rule before compilation */
   original: Rule;
-
-  /** The resolved helper function for this rule */
   helper: any;
-
-  /** Parsed path segments for field access (e.g., ['user', 'profile', 'email']) */
   pathSegments: string[];
-
-  /** Whether this rule has parameters that need to be resolved */
   hasParams: boolean;
 }

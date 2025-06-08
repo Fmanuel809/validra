@@ -20,6 +20,10 @@ export class SyncValidator implements ISyncValidator {
     throwOnUnknownField?: boolean;
   };
 
+  /**
+   * Creates a new SyncValidator instance.
+   * @param options Optional configuration for debugging, partial validation, and error handling.
+   */
   constructor(options: { debug?: boolean; allowPartialValidation?: boolean; throwOnUnknownField?: boolean } = {}) {
     this.logger = new ValidraLogger('SyncValidator');
     this.options = options;
