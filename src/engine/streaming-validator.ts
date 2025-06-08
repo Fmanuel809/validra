@@ -1,7 +1,7 @@
 import { ValidraResult } from './interfaces';
 import {
-  StreamingValidationResult,
   StreamingValidationOptions,
+  StreamingValidationResult,
   StreamingValidationSummary,
 } from './interfaces/streaming-result';
 
@@ -9,7 +9,7 @@ import {
  * Streaming validation for large datasets with constant memory usage
  */
 export class ValidraStreamingValidator<T extends Record<string, any>> {
-  private readonly onChunkComplete?: (result: StreamingValidationResult<any>) => void;
+  private readonly onChunkComplete?: (result: StreamingValidationResult<any | T>) => void;
   private readonly onComplete?: (summary: StreamingValidationSummary) => void;
 
   constructor(options: StreamingValidationOptions = {}) {

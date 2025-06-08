@@ -1,15 +1,15 @@
-import { helpersActions, Helper } from '@/dsl';
+import { helpersActions } from '@/dsl';
+import { ValidraLogger } from '@/utils/validra-logger';
 import {
-  ValidraCallback,
-  ValidraEngineOptions,
-  ValidraResult,
   StreamingValidationOptions,
   StreamingValidationResult,
   StreamingValidationSummary,
+  ValidraCallback,
+  ValidraEngineOptions,
+  ValidraResult,
 } from './interfaces';
+import { MemoryPoolFactories, ValidraMemoryPool } from './memory-pool';
 import { Rule } from './rule';
-import { ValidraLogger } from '@/utils/validra-logger';
-import { ValidraMemoryPool, MemoryPoolFactories } from './memory-pool';
 import { ValidraStreamingValidator } from './streaming-validator';
 
 /**
@@ -86,6 +86,7 @@ export class ValidraEngine {
       return str.length;
     } catch (error) {
       // Handle circular references or non-serializable data
+      this.logger.warn('Failed to calculate data size', error);
       return -1;
     }
   }
@@ -375,7 +376,8 @@ export class ValidraEngine {
       } catch (error) {
         this.debugLog(
           () =>
-            `Error applying rule ${compiledRule.original.op} on field ${compiledRule.original.field}: ${(error as Error).message}`,
+            `Error applying rule ${compiledRule.original.op} on
+            field ${compiledRule.original.field}: ${(error as Error).message}`,
         );
 
         if (!this.options.allowPartialValidation) {
@@ -411,7 +413,7 @@ export class ValidraEngine {
 
     let current = data;
     for (const segment of pathSegments) {
-      if (current == null) {
+      if (current === null) {
         return undefined;
       }
 
@@ -538,7 +540,7 @@ export class ValidraEngine {
         }
       } catch (error) {
         if (this.options.debug) {
-          this.logger.warn(`Helper not found during preload: ${op}`);
+          this.logger.warn(`Helper not found during preload: ${op}`, error);
         }
       }
     }
