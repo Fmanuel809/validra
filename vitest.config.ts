@@ -1,5 +1,5 @@
-import { defineConfig } from 'vitest/config'
-import { resolve } from 'path'
+import { resolve } from 'path';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   resolve: {
@@ -8,12 +8,15 @@ export default defineConfig({
       '@/core': resolve(__dirname, './src/core'),
       '@/dsl': resolve(__dirname, './src/dsl'),
       '@/operations': resolve(__dirname, './src/operations'),
-      '@/utils': resolve(__dirname, './src/utils')
-    }
+      '@/utils': resolve(__dirname, './src/utils'),
+    },
   },
   test: {
     environment: 'node',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}', 'tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: [
+      'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+      'tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+    ],
     exclude: ['node_modules', 'dist', 'docs'],
     coverage: {
       provider: 'v8',
@@ -23,21 +26,24 @@ export default defineConfig({
       exclude: [
         'src/**/*.{test,spec}.{js,ts}',
         'src/**/index.ts',
-        'src/**/*.d.ts'
+        'src/**/*.d.ts',
+        'src/**/interfaces/*',
+        'src/**/types/*',
+        'src/**/*.types.ts',
       ],
       thresholds: {
         global: {
           branches: 80,
           functions: 80,
           lines: 80,
-          statements: 80
-        }
-      }
+          statements: 80,
+        },
+      },
     },
     reporters: ['verbose'],
     outputFile: {
       json: './test-output/test-results.json',
-      html: './test-output/test-results.html'
+      html: './test-output/test-results.html',
     },
     globals: true,
     watch: false,
@@ -48,7 +54,7 @@ export default defineConfig({
     typecheck: {
       checker: 'tsc',
       include: ['src/**/*.{test,spec}.ts'],
-      exclude: ['node_modules']
-    }
-  }
-})
+      exclude: ['node_modules'],
+    },
+  },
+});
