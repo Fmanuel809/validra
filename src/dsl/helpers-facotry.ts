@@ -251,7 +251,7 @@ const AVAILABLE_HELPERS = [
   },
   {
     name: 'isLeapYear',
-    description: 'Checks if a date\'s year is a leap year.',
+    description: 'Checks if a date year is a leap year.',
     example: '{ "op": "isLeapYear", field: "<facts.field>" }',
     category: 'date',
     params: [],
