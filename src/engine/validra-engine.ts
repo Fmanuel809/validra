@@ -413,7 +413,7 @@ export class ValidraEngine {
 
     let current = data;
     for (const segment of pathSegments) {
-      if (current === null) {
+      if (current === null || current === undefined) {
         return undefined;
       }
 
