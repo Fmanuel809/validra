@@ -6,7 +6,7 @@
  * @since 1.0.0
  */
 
-import { TypeChecker } from "./type-checker";
+import { TypeChecker } from './type-checker';
 
 /**
  * Utility class providing static methods for date comparison and validation operations.
@@ -53,7 +53,7 @@ export class DateMatcher {
    */
   static isAfter(date: Date, reference: Date): boolean {
     if (!TypeChecker.isDate(date) || !TypeChecker.isDate(reference)) {
-      throw "Both date and reference must be valid Date instances.";
+      throw 'Both date and reference must be valid Date instances.';
     }
 
     return date.getTime() > reference.getTime();
@@ -84,7 +84,7 @@ export class DateMatcher {
    */
   static isBefore(date: Date, reference: Date): boolean {
     if (!TypeChecker.isDate(date) || !TypeChecker.isDate(reference)) {
-      throw "Both date and reference must be valid Date instances.";
+      throw 'Both date and reference must be valid Date instances.';
     }
 
     return date.getTime() < reference.getTime();
@@ -115,7 +115,7 @@ export class DateMatcher {
    */
   static isToday(date: Date): boolean {
     if (!TypeChecker.isDate(date)) {
-      throw "The provided value must be a valid Date instance.";
+      throw 'The provided value must be a valid Date instance.';
     }
 
     const today = new Date();
@@ -147,7 +147,7 @@ export class DateMatcher {
    */
   static isWeekend(date: Date): boolean {
     if (!TypeChecker.isDate(date)) {
-      throw "The provided value must be a valid Date instance.";
+      throw 'The provided value must be a valid Date instance.';
     }
 
     const day = date.getUTCDay();
@@ -176,7 +176,7 @@ export class DateMatcher {
    */
   static isWeekday(date: Date): boolean {
     if (!TypeChecker.isDate(date)) {
-      throw "The provided value must be a valid Date instance.";
+      throw 'The provided value must be a valid Date instance.';
     }
 
     const day = date.getUTCDay();
@@ -206,7 +206,7 @@ export class DateMatcher {
    */
   static isLeapYear(date: Date): boolean {
     if (!TypeChecker.isDate(date)) {
-      throw "The provided value must be a valid Date instance.";
+      throw 'The provided value must be a valid Date instance.';
     }
 
     const year = date.getUTCFullYear();

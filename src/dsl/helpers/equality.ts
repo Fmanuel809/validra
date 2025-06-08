@@ -1,4 +1,4 @@
-import { flatValues, isNullOrUndefined } from "@/utils";
+import { flatValues, isNullOrUndefined } from '@/utils';
 
 /**
  * Utility class for performing equality and inequality comparisons between values.
@@ -42,8 +42,9 @@ export class Equality {
    * ```
    */
   static isEqual(valueA: flatValues, valueB: flatValues): boolean {
-    if (isNullOrUndefined(valueA) || isNullOrUndefined(valueB))
-      throw new Error("Both values must be provided for comparison.");
+    if (isNullOrUndefined(valueA) || isNullOrUndefined(valueB)) {
+      throw new Error('Both values must be provided for comparison.');
+    }
 
     if (valueA instanceof Date && valueB instanceof Date) {
       return valueA.getTime() === valueB.getTime();
@@ -72,8 +73,9 @@ export class Equality {
    * ```
    */
   static isNotEqual(valueA: flatValues, valueB: flatValues): boolean {
-    if (isNullOrUndefined(valueA) || isNullOrUndefined(valueB))
-      throw new Error("Both values must be provided for comparison.");
+    if (isNullOrUndefined(valueA) || isNullOrUndefined(valueB)) {
+      throw new Error('Both values must be provided for comparison.');
+    }
 
     if (valueA instanceof Date && valueB instanceof Date) {
       return valueA.getTime() !== valueB.getTime();

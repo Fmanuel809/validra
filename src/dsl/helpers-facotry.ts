@@ -12,15 +12,8 @@
  * @since 1.0.0
  */
 
-import {
-  CollectionChecker,
-  Comparison,
-  DateMatcher,
-  Equality,
-  StringChecker,
-  TypeChecker,
-} from "./helpers";
-import { HelperResolverSchema, HelperSchema } from "./interfaces/helper-schema";
+import { CollectionChecker, Comparison, DateMatcher, Equality, StringChecker, TypeChecker } from './helpers';
+import { HelperResolverSchema, HelperSchema } from './interfaces/helper-schema';
 
 /**
  * Comprehensive registry of available helper functions for the Validra validation framework.
@@ -50,300 +43,299 @@ import { HelperResolverSchema, HelperSchema } from "./interfaces/helper-schema";
  */
 const AVAILABLE_HELPERS = [
   {
-    name: "eq",
-    description: "Checks if two values are equal.",
-    example: `{ "op": "eq", field: "<facts.field>", params: { value: 30 } }`,
-    category: "equality",
-    params: ["value"],
+    name: 'eq',
+    description: 'Checks if two values are equal.',
+    example: '{ "op": "eq", field: "<facts.field>", params: { value: 30 } }',
+    category: 'equality',
+    params: ['value'],
     resolver: Equality.isEqual,
     async: false,
   },
   {
-    name: "neq",
-    description: "Checks if two values are not equal.",
-    example: `{ "op": "neq", field: "<facts.field>", params: { value: 30 } }`,
-    category: "equality",
-    params: ["value"],
+    name: 'neq',
+    description: 'Checks if two values are not equal.',
+    example: '{ "op": "neq", field: "<facts.field>", params: { value: 30 } }',
+    category: 'equality',
+    params: ['value'],
     resolver: Equality.isNotEqual,
     async: false,
   },
   {
-    name: "isEmpty",
-    description: "Checks if a string is empty or contains only whitespace.",
-    example: `{ "op": "isEmpty", field: "<facts.field>" }`,
-    category: "string",
+    name: 'isEmpty',
+    description: 'Checks if a string is empty or contains only whitespace.',
+    example: '{ "op": "isEmpty", field: "<facts.field>" }',
+    category: 'string',
     params: [],
     resolver: StringChecker.isEmpty,
     async: false,
   },
   {
-    name: "contains",
-    description: "Checks if a string contains a substring.",
-    example: `{ "op": "contains", field: "<facts.field>", params: { value: "substring" } }`,
-    category: "string",
-    params: ["value"],
+    name: 'contains',
+    description: 'Checks if a string contains a substring.',
+    example: '{ "op": "contains", field: "<facts.field>", params: { value: "substring" } }',
+    category: 'string',
+    params: ['value'],
     resolver: StringChecker.contains,
     async: false,
   },
   {
-    name: "startsWith",
-    description: "Checks if a string starts with a specific prefix.",
-    example: `{ "op": "startsWith", field: "<facts.field>", params: { value: "prefix" } }`,
-    category: "string",
-    params: ["value"],
+    name: 'startsWith',
+    description: 'Checks if a string starts with a specific prefix.',
+    example: '{ "op": "startsWith", field: "<facts.field>", params: { value: "prefix" } }',
+    category: 'string',
+    params: ['value'],
     resolver: StringChecker.startsWith,
     async: false,
   },
   {
-    name: "endsWith",
-    description: "Checks if a string ends with a specific suffix.",
-    example: `{ "op": "endsWith", field: "<facts.field>", params: { value: "suffix" } }`,
-    category: "string",
-    params: ["value"],
+    name: 'endsWith',
+    description: 'Checks if a string ends with a specific suffix.',
+    example: '{ "op": "endsWith", field: "<facts.field>", params: { value: "suffix" } }',
+    category: 'string',
+    params: ['value'],
     resolver: StringChecker.endsWith,
     async: false,
   },
   {
-    name: "regexMatch",
-    description: "Checks if a string matches a regular expression pattern.",
-    example: `{ "op": "regexMatch", field: "<facts.field>", params: { regex: "/pattern/" } }`,
-    category: "string",
-    params: ["regex"],
+    name: 'regexMatch',
+    description: 'Checks if a string matches a regular expression pattern.',
+    example: '{ "op": "regexMatch", field: "<facts.field>", params: { regex: "/pattern/" } }',
+    category: 'string',
+    params: ['regex'],
     resolver: StringChecker.regexMatch,
     async: false,
   },
   {
-    name: "isEmail",
-    description: "Validates if a string is a properly formatted email address.",
-    example: `{ "op": "isEmail", field: "<facts.field>" }`,
-    category: "string",
+    name: 'isEmail',
+    description: 'Validates if a string is a properly formatted email address.',
+    example: '{ "op": "isEmail", field: "<facts.field>" }',
+    category: 'string',
     params: [],
     resolver: StringChecker.isEmail,
     async: false,
   },
   {
-    name: "isURL",
-    description: "Validates if a string is a properly formatted URL.",
-    example: `{ "op": "isURL", field: "<facts.field>" }`,
-    category: "string",
+    name: 'isURL',
+    description: 'Validates if a string is a properly formatted URL.',
+    example: '{ "op": "isURL", field: "<facts.field>" }',
+    category: 'string',
     params: [],
     resolver: StringChecker.isURL,
     async: false,
   },
   {
-    name: "isUUID",
-    description: "Validates if a string is a properly formatted UUID.",
-    example: `{ "op": "isUUID", field: "<facts.field>" }`,
-    category: "string",
+    name: 'isUUID',
+    description: 'Validates if a string is a properly formatted UUID.',
+    example: '{ "op": "isUUID", field: "<facts.field>" }',
+    category: 'string',
     params: [],
     resolver: StringChecker.isUUID,
     async: false,
   },
   {
-    name: "minLength",
-    description:
-      "Checks if a string has at least the specified minimum length.",
-    example: `{ "op": "minLength", field: "<facts.field>", params: { value: 5 } }`,
-    category: "string",
-    params: ["value"],
+    name: 'minLength',
+    description: 'Checks if a string has at least the specified minimum length.',
+    example: '{ "op": "minLength", field: "<facts.field>", params: { value: 5 } }',
+    category: 'string',
+    params: ['value'],
     resolver: StringChecker.minLength,
     async: false,
   },
   {
-    name: "maxLength",
-    description: "Checks if a string has at most the specified maximum length.",
-    example: `{ "op": "maxLength", field: "<facts.field>", params: { value: 10 } }`,
-    category: "string",
-    params: ["value"],
+    name: 'maxLength',
+    description: 'Checks if a string has at most the specified maximum length.',
+    example: '{ "op": "maxLength", field: "<facts.field>", params: { value: 10 } }',
+    category: 'string',
+    params: ['value'],
     resolver: StringChecker.maxLength,
     async: false,
   },
   {
-    name: "isString",
-    description: "Checks if a value is a string.",
-    example: `{ "op": "isString", field: "<facts.field>" }`,
-    category: "type",
+    name: 'isString',
+    description: 'Checks if a value is a string.',
+    example: '{ "op": "isString", field: "<facts.field>" }',
+    category: 'type',
     params: [],
     resolver: TypeChecker.isString,
     async: false,
   },
   {
-    name: "isNumber",
-    description: "Checks if a value is a valid number.",
-    example: `{ "op": "isNumber", field: "<facts.field>" }`,
-    category: "type",
+    name: 'isNumber',
+    description: 'Checks if a value is a valid number.',
+    example: '{ "op": "isNumber", field: "<facts.field>" }',
+    category: 'type',
     params: [],
     resolver: TypeChecker.isNumber,
     async: false,
   },
   {
-    name: "isBoolean",
-    description: "Checks if a value is a boolean.",
-    example: `{ "op": "isBoolean", field: "<facts.field>" }`,
-    category: "type",
+    name: 'isBoolean',
+    description: 'Checks if a value is a boolean.',
+    example: '{ "op": "isBoolean", field: "<facts.field>" }',
+    category: 'type',
     params: [],
     resolver: TypeChecker.isBoolean,
     async: false,
   },
   {
-    name: "isDate",
-    description: "Checks if a value is a Date instance.",
-    example: `{ "op": "isDate", field: "<facts.field>" }`,
-    category: "type",
+    name: 'isDate',
+    description: 'Checks if a value is a Date instance.',
+    example: '{ "op": "isDate", field: "<facts.field>" }',
+    category: 'type',
     params: [],
     resolver: TypeChecker.isDate,
     async: false,
   },
   {
-    name: "isArray",
-    description: "Checks if a value is an array.",
-    example: `{ "op": "isArray", field: "<facts.field>" }`,
-    category: "type",
+    name: 'isArray',
+    description: 'Checks if a value is an array.',
+    example: '{ "op": "isArray", field: "<facts.field>" }',
+    category: 'type',
     params: [],
     resolver: TypeChecker.isArray,
     async: false,
   },
   {
-    name: "isObject",
-    description: "Checks if a value is an object (excluding arrays and null).",
-    example: `{ "op": "isObject", field: "<facts.field>" }`,
-    category: "type",
+    name: 'isObject',
+    description: 'Checks if a value is an object (excluding arrays and null).',
+    example: '{ "op": "isObject", field: "<facts.field>" }',
+    category: 'type',
     params: [],
     resolver: TypeChecker.isObject,
     async: false,
   },
   {
-    name: "isAfter",
-    description: "Checks if a date is after another reference date.",
-    example: `{ "op": "isAfter", field: "<facts.field>", params: { refDate: "2025-06-06" } }`,
-    category: "date",
-    params: ["refDate"],
+    name: 'isAfter',
+    description: 'Checks if a date is after another reference date.',
+    example: '{ "op": "isAfter", field: "<facts.field>", params: { refDate: "2025-06-06" } }',
+    category: 'date',
+    params: ['refDate'],
     resolver: DateMatcher.isAfter,
     async: false,
   },
   {
-    name: "isBefore",
-    description: "Checks if a date is before another reference date.",
-    example: `{ "op": "isBefore", field: "<facts.field>", params: { refDate: "2025-06-06" } }`,
-    category: "date",
-    params: ["refDate"],
+    name: 'isBefore',
+    description: 'Checks if a date is before another reference date.',
+    example: '{ "op": "isBefore", field: "<facts.field>", params: { refDate: "2025-06-06" } }',
+    category: 'date',
+    params: ['refDate'],
     resolver: DateMatcher.isBefore,
     async: false,
   },
   {
-    name: "isToday",
-    description: "Checks if a date is today (UTC comparison).",
-    example: `{ "op": "isToday", field: "<facts.field>" }`,
-    category: "date",
+    name: 'isToday',
+    description: 'Checks if a date is today (UTC comparison).',
+    example: '{ "op": "isToday", field: "<facts.field>" }',
+    category: 'date',
     params: [],
     resolver: DateMatcher.isToday,
     async: false,
   },
   {
-    name: "isWeekend",
-    description: "Checks if a date falls on a weekend (Saturday or Sunday).",
-    example: `{ "op": "isWeekend", field: "<facts.field>" }`,
-    category: "date",
+    name: 'isWeekend',
+    description: 'Checks if a date falls on a weekend (Saturday or Sunday).',
+    example: '{ "op": "isWeekend", field: "<facts.field>" }',
+    category: 'date',
     params: [],
     resolver: DateMatcher.isWeekend,
     async: false,
   },
   {
-    name: "isWeekday",
-    description: "Checks if a date falls on a weekday (Monday to Friday).",
-    example: `{ "op": "isWeekday", field: "<facts.field>" }`,
-    category: "date",
+    name: 'isWeekday',
+    description: 'Checks if a date falls on a weekday (Monday to Friday).',
+    example: '{ "op": "isWeekday", field: "<facts.field>" }',
+    category: 'date',
     params: [],
     resolver: DateMatcher.isWeekday,
     async: false,
   },
   {
-    name: "isLeapYear",
-    description: "Checks if a date's year is a leap year.",
-    example: `{ "op": "isLeapYear", field: "<facts.field>" }`,
-    category: "date",
+    name: 'isLeapYear',
+    description: 'Checks if a date\'s year is a leap year.',
+    example: '{ "op": "isLeapYear", field: "<facts.field>" }',
+    category: 'date',
     params: [],
     resolver: DateMatcher.isLeapYear,
     async: false,
   },
   {
-    name: "isEmptyCollection",
-    description: "Checks if a collection (array or object) is empty.",
-    example: `{ "op": "isEmptyCollection", field: "<facts.field>" }`,
-    category: "collection",
+    name: 'isEmptyCollection',
+    description: 'Checks if a collection (array or object) is empty.',
+    example: '{ "op": "isEmptyCollection", field: "<facts.field>" }',
+    category: 'collection',
     params: [],
     resolver: CollectionChecker.isEmpty,
     async: false,
   },
   {
-    name: "hasProperty",
-    description: "Checks if an object has a specific property.",
-    example: `{ "op": "hasProperty", field: "<facts.field>", params: { prop: "propertyName" } }`,
-    category: "collection",
-    params: ["prop"],
+    name: 'hasProperty',
+    description: 'Checks if an object has a specific property.',
+    example: '{ "op": "hasProperty", field: "<facts.field>", params: { prop: "propertyName" } }',
+    category: 'collection',
+    params: ['prop'],
     resolver: CollectionChecker.hasProperty,
     async: false,
   },
   {
-    name: "containsItem",
-    description: "Checks if a collection contains a specific item.",
-    example: `{ "op": "containsItem", field: "<facts.field>", params: { value: "item" } }`,
-    category: "collection",
-    params: ["value"],
+    name: 'containsItem',
+    description: 'Checks if a collection contains a specific item.',
+    example: '{ "op": "containsItem", field: "<facts.field>", params: { value: "item" } }',
+    category: 'collection',
+    params: ['value'],
     resolver: CollectionChecker.contains,
     async: false,
   },
   {
-    name: "gt",
-    description: "Checks if a value is greater than another value.",
-    example: `{ "op": "gt", field: "<facts.field>", params: { value: 10 } }`,
-    category: "comparison",
-    params: ["value"],
+    name: 'gt',
+    description: 'Checks if a value is greater than another value.',
+    example: '{ "op": "gt", field: "<facts.field>", params: { value: 10 } }',
+    category: 'comparison',
+    params: ['value'],
     resolver: Comparison.isGreaterThan,
     async: false,
   },
   {
-    name: "gte",
-    description: "Checks if a value is greater than or equal to another value.",
-    example: `{ "op": "gte", field: "<facts.field>", params: { value: 10 } }`,
-    category: "comparison",
-    params: ["value"],
+    name: 'gte',
+    description: 'Checks if a value is greater than or equal to another value.',
+    example: '{ "op": "gte", field: "<facts.field>", params: { value: 10 } }',
+    category: 'comparison',
+    params: ['value'],
     resolver: Comparison.isGreaterThanOrEqual,
     async: false,
   },
   {
-    name: "lt",
-    description: "Checks if a value is less than another value.",
-    example: `{ "op": "lt", field: "<facts.field>", params: { value: 10 } }`,
-    category: "comparison",
-    params: ["value"],
+    name: 'lt',
+    description: 'Checks if a value is less than another value.',
+    example: '{ "op": "lt", field: "<facts.field>", params: { value: 10 } }',
+    category: 'comparison',
+    params: ['value'],
     resolver: Comparison.isLessThan,
     async: false,
   },
   {
-    name: "lte",
-    description: "Checks if a value is less than or equal to another value.",
-    example: `{ "op": "lte", field: "<facts.field>", params: { value: 10 } }`,
-    category: "comparison",
-    params: ["value"],
+    name: 'lte',
+    description: 'Checks if a value is less than or equal to another value.',
+    example: '{ "op": "lte", field: "<facts.field>", params: { value: 10 } }',
+    category: 'comparison',
+    params: ['value'],
     resolver: Comparison.isLessThanOrEqual,
     async: false,
   },
   {
-    name: "between",
-    description: "Checks if a value is between two other values (inclusive).",
-    example: `{ "op": "between", field: "<facts.field>", params: { min: 10, max: 20 } }`,
-    category: "comparison",
-    params: ["min", "max"],
+    name: 'between',
+    description: 'Checks if a value is between two other values (inclusive).',
+    example: '{ "op": "between", field: "<facts.field>", params: { min: 10, max: 20 } }',
+    category: 'comparison',
+    params: ['min', 'max'],
     resolver: Comparison.between,
     async: false,
   },
   {
-    name: "notBetween",
-    description: "Checks if a value is not between two other values.",
-    example: `{ "op": "notBetween", field: "<facts.field>", params: { min: 10, max: 20 } }`,
-    category: "comparison",
-    params: ["min", "max"],
+    name: 'notBetween',
+    description: 'Checks if a value is not between two other values.',
+    example: '{ "op": "notBetween", field: "<facts.field>", params: { min: 10, max: 20 } }',
+    category: 'comparison',
+    params: ['min', 'max'],
     resolver: Comparison.notBetween,
     async: false,
   },
@@ -353,9 +345,7 @@ const AVAILABLE_HELPERS = [
  * Optimized Map for O(1) helper lookups
  * Pre-built Map containing all helpers for fast access
  */
-const HELPERS_MAP = new Map(
-  AVAILABLE_HELPERS.map((helper) => [helper.name, helper]),
-);
+const HELPERS_MAP = new Map(AVAILABLE_HELPERS.map(helper => [helper.name, helper]));
 
 /**
  * Union type representing all available helper names.
@@ -367,7 +357,7 @@ const HELPERS_MAP = new Map(
  * @since 1.0.0
  *
  */
-type HelperName = (typeof AVAILABLE_HELPERS)[number]["name"];
+type HelperName = (typeof AVAILABLE_HELPERS)[number]['name'];
 
 /**
  * Utility type to extract parameter names for a specific helper.
@@ -380,10 +370,7 @@ type HelperName = (typeof AVAILABLE_HELPERS)[number]["name"];
  * @since 1.0.0
  *
  */
-type GetHelperParams<T extends HelperName> = Extract<
-  (typeof AVAILABLE_HELPERS)[number],
-  { name: T }
->["params"];
+type GetHelperParams<T extends HelperName> = Extract<(typeof AVAILABLE_HELPERS)[number], { name: T }>['params'];
 
 /**
  * Discriminated union type representing all possible helper operations.
@@ -429,9 +416,7 @@ export type Helper = {
   [K in HelperName]: {
     op: K;
     field: string;
-  } & (GetHelperParams<K> extends readonly []
-    ? {}
-    : { params: Record<GetHelperParams<K>[number], any> });
+  } & (GetHelperParams<K> extends readonly [] ? {} : { params: Record<GetHelperParams<K>[number], any> });
 }[HelperName];
 
 /**
@@ -446,7 +431,7 @@ export const helpersActions = {
    * @returns An array of HelperSchema objects containing helper metadata
    */
   getHelpers: (): HelperSchema[] => {
-    const helpers: HelperSchema[] = AVAILABLE_HELPERS.map((helper) => {
+    const helpers: HelperSchema[] = AVAILABLE_HELPERS.map(helper => {
       return {
         name: helper.name,
         description: helper.description,
@@ -466,9 +451,7 @@ export const helpersActions = {
    * @returns The HelperResolverSchema containing the resolver function and async flag
    * @throws {Error} When no helper with the specified name is found
    */
-  getHelperResolverSchema: <T extends HelperName>(
-    helperName: T,
-  ): HelperResolverSchema => {
+  getHelperResolverSchema: <T extends HelperName>(helperName: T): HelperResolverSchema => {
     const helper = HELPERS_MAP.get(helperName);
     if (!helper) {
       throw new Error(`Helper with name "${helperName}" not found.`);

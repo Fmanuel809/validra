@@ -1,6 +1,4 @@
-export interface ValidraResult<
-  T extends Record<string, any> = Record<string, any>,
-> {
+export interface ValidraResult<T extends Record<string, any> = Record<string, any>> {
   isValid: boolean;
   message?: string;
   errors?: ErrorResult<T>;

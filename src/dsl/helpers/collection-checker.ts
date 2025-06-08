@@ -6,7 +6,7 @@
  * @since 1.0.0
  */
 
-import { TypeChecker } from "./type-checker";
+import { TypeChecker } from './type-checker';
 
 /**
  * Utility class providing static methods for collection validation and property checking operations.
@@ -65,12 +65,9 @@ export class CollectionChecker {
     if (Array.isArray(collection)) {
       return collection.length === 0;
     } else if (TypeChecker.isObject(collection)) {
-      return (
-        Object.keys(collection).length === 0 &&
-        Object.getOwnPropertySymbols(collection).length === 0
-      );
+      return Object.keys(collection).length === 0 && Object.getOwnPropertySymbols(collection).length === 0;
     } else {
-      throw "Input must be an array or an object.";
+      throw 'Input must be an array or an object.';
     }
   }
 
@@ -105,16 +102,13 @@ export class CollectionChecker {
    *
    * @since 1.0.0
    */
-  static hasProperty(
-    value: Record<string, any>,
-    prop: string | string[],
-  ): boolean {
+  static hasProperty(value: Record<string, any>, prop: string | string[]): boolean {
     if (!TypeChecker.isObject(value)) {
-      throw "Value must be an object.";
+      throw 'Value must be an object.';
     }
 
     if (Array.isArray(prop)) {
-      return prop.every((p) => p in value);
+      return prop.every(p => p in value);
     } else {
       return prop in value;
     }
@@ -160,7 +154,7 @@ export class CollectionChecker {
     } else if (TypeChecker.isObject(collection)) {
       return Object.values(collection).includes(item);
     } else {
-      throw "Input must be an array or an object.";
+      throw 'Input must be an array or an object.';
     }
   }
 }

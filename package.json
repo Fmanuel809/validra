@@ -72,12 +72,17 @@
     "test:ui": "vitest --ui --watch --coverage",
     "lint": "eslint src --ext .ts,.tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "lint:check": "eslint src --ext .ts,.tsx --report-unused-disable-directives",
     "format": "prettier --write \"src/**/*.{ts,tsx,json,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,json,md}\"",
+    "code:check": "npm run format:check && npm run lint:check && npm run type-check",
+    "code:fix": "npm run format && npm run lint:fix",
+    "ci": "npm run code:check && npm run test:run && npm run build",
     "prepublishOnly": "npm run build:check && npm run test:run && npm run docs"
   },
   "type": "module",
   "devDependencies": {
+    "@eslint/js": "^9.28.0",
     "@types/node": "^22.15.29",
     "@typescript-eslint/eslint-plugin": "^8.17.0",
     "@typescript-eslint/parser": "^8.17.0",

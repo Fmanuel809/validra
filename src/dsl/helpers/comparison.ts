@@ -11,7 +11,7 @@
  * @since 1.0.0
  */
 
-import { isNullOrUndefined, isNumber } from "@/utils";
+import { isNullOrUndefined, isNumber } from '@/utils';
 
 /**
  * Utility class for performing numerical comparisons and range validations.
@@ -64,11 +64,13 @@ export class Comparison {
    * @static
    */
   static isGreaterThan(valueA: number, valueB: number): boolean {
-    if (isNullOrUndefined(valueA) || isNullOrUndefined(valueB))
-      throw new Error("Both values must be provided for comparison.");
+    if (isNullOrUndefined(valueA) || isNullOrUndefined(valueB)) {
+      throw new Error('Both values must be provided for comparison.');
+    }
 
-    if (!isNumber(valueA) || !isNumber(valueB))
-      throw new Error("Both values must be numbers for comparison.");
+    if (!isNumber(valueA) || !isNumber(valueB)) {
+      throw new Error('Both values must be numbers for comparison.');
+    }
 
     return valueA > valueB;
   }
@@ -96,11 +98,13 @@ export class Comparison {
    * @static
    */
   static isLessThan(valueA: number, valueB: number): boolean {
-    if (isNullOrUndefined(valueA) || isNullOrUndefined(valueB))
-      throw new Error("Both values must be provided for comparison.");
+    if (isNullOrUndefined(valueA) || isNullOrUndefined(valueB)) {
+      throw new Error('Both values must be provided for comparison.');
+    }
 
-    if (!isNumber(valueA) || !isNumber(valueB))
-      throw new Error("Both values must be numbers for comparison.");
+    if (!isNumber(valueA) || !isNumber(valueB)) {
+      throw new Error('Both values must be numbers for comparison.');
+    }
 
     return valueA < valueB;
   }
@@ -128,11 +132,13 @@ export class Comparison {
    * @static
    */
   static isGreaterThanOrEqual(valueA: number, valueB: number): boolean {
-    if (isNullOrUndefined(valueA) || isNullOrUndefined(valueB))
-      throw new Error("Both values must be provided for comparison.");
+    if (isNullOrUndefined(valueA) || isNullOrUndefined(valueB)) {
+      throw new Error('Both values must be provided for comparison.');
+    }
 
-    if (!isNumber(valueA) || !isNumber(valueB))
-      throw new Error("Both values must be numbers for comparison.");
+    if (!isNumber(valueA) || !isNumber(valueB)) {
+      throw new Error('Both values must be numbers for comparison.');
+    }
 
     return valueA >= valueB;
   }
@@ -160,11 +166,13 @@ export class Comparison {
    * @static
    */
   static isLessThanOrEqual(valueA: number, valueB: number): boolean {
-    if (isNullOrUndefined(valueA) || isNullOrUndefined(valueB))
-      throw new Error("Both values must be provided for comparison.");
+    if (isNullOrUndefined(valueA) || isNullOrUndefined(valueB)) {
+      throw new Error('Both values must be provided for comparison.');
+    }
 
-    if (!isNumber(valueA) || !isNumber(valueB))
-      throw new Error("Both values must be numbers for comparison.");
+    if (!isNumber(valueA) || !isNumber(valueB)) {
+      throw new Error('Both values must be numbers for comparison.');
+    }
 
     return valueA <= valueB;
   }
@@ -194,15 +202,13 @@ export class Comparison {
    * @static
    */
   static between(value: number, min: number, max: number): boolean {
-    if (
-      isNullOrUndefined(value) ||
-      isNullOrUndefined(min) ||
-      isNullOrUndefined(max)
-    )
-      throw new Error("All three values must be provided for comparison.");
+    if (isNullOrUndefined(value) || isNullOrUndefined(min) || isNullOrUndefined(max)) {
+      throw new Error('All three values must be provided for comparison.');
+    }
 
-    if (!isNumber(value) || !isNumber(min) || !isNumber(max))
-      throw new Error("All three values must be numbers for comparison.");
+    if (!isNumber(value) || !isNumber(min) || !isNumber(max)) {
+      throw new Error('All three values must be numbers for comparison.');
+    }
 
     return value >= min && value <= max;
   }
@@ -232,15 +238,13 @@ export class Comparison {
    * @static
    */
   static notBetween(value: number, min: number, max: number): boolean {
-    if (
-      isNullOrUndefined(value) ||
-      isNullOrUndefined(min) ||
-      isNullOrUndefined(max)
-    )
-      throw new Error("All three values must be provided for comparison.");
+    if (isNullOrUndefined(value) || isNullOrUndefined(min) || isNullOrUndefined(max)) {
+      throw new Error('All three values must be provided for comparison.');
+    }
 
-    if (!isNumber(value) || !isNumber(min) || !isNumber(max))
-      throw new Error("All three values must be numbers for comparison.");
+    if (!isNumber(value) || !isNumber(min) || !isNumber(max)) {
+      throw new Error('All three values must be numbers for comparison.');
+    }
 
     return value < min || value > max;
   }

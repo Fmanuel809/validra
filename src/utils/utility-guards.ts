@@ -11,7 +11,7 @@
  * @since 1.0.0
  */
 
-import { flatValues } from "./utility.types";
+import { flatValues } from './utility.types';
 
 /**
  * Type guard utility functions for validating and checking values.
@@ -79,5 +79,5 @@ export function isNullOrUndefined(value: flatValues): boolean {
  * @public
  */
 export function isNumber(value: unknown): boolean {
-  return typeof value === "number" && !isNaN(value);
+  return typeof value === 'number' && !isNaN(value);
 }

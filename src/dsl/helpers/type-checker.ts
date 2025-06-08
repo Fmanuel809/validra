@@ -60,7 +60,7 @@ export class TypeChecker {
    * @static
    */
   static isString(value: unknown): boolean {
-    return typeof value === "string" || value instanceof String;
+    return typeof value === 'string' || value instanceof String;
   }
 
   /**
@@ -111,7 +111,7 @@ export class TypeChecker {
    * @static
    */
   static isNumber(value: unknown): boolean {
-    return typeof value === "number" && !isNaN(value);
+    return typeof value === 'number' && !isNaN(value);
   }
 
   /**
@@ -137,7 +137,7 @@ export class TypeChecker {
    * @static
    */
   static isBoolean(value: unknown): boolean {
-    return typeof value === "boolean";
+    return typeof value === 'boolean';
   }
 
   /**
@@ -190,6 +190,6 @@ export class TypeChecker {
    * @static
    */
   static isObject(value: unknown): boolean {
-    return value !== null && typeof value === "object" && !Array.isArray(value);
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
   }
 }

@@ -27,7 +27,6 @@
 
 **Validra is currently in active development.** The core functionality is being built and the API is subject to change. This project is not yet ready for production use.
 
-
 ## 🚀 Getting Started
 
 The API and usage examples will be documented here as the project develops. Stay tuned for updates!
@@ -55,13 +54,37 @@ npm run dev
 ### Scripts
 
 ```bash
+# Build and development
 npm run build         # Build the project
-npm run test          # Run tests
-npm run test:coverage # Run tests with coverage
-npm run docs          # Generate documentation
-npm run lint          # Lint the code
-npm run format        # Format the code
+npm run build:prod    # Production build
 npm run dev           # Development mode with watch
+npm run clean         # Clean build directory
+
+# Testing
+npm run test          # Run tests in watch mode
+npm run test:run      # Run tests once
+npm run test:coverage # Run tests with coverage
+npm run test:ui       # Run tests with UI
+
+# Code quality
+npm run lint          # Lint the code (strict)
+npm run lint:check    # Lint the code (check only)
+npm run lint:fix      # Fix linting issues
+npm run format        # Format the code
+npm run format:check  # Check code formatting
+npm run code:check    # Check format + lint + types
+npm run code:fix      # Fix format + lint issues
+
+# Documentation
+npm run docs          # Generate documentation
+npm run docs:serve    # Serve documentation
+npm run docs:watch    # Watch and rebuild docs
+
+# Type checking
+npm run type-check    # Check TypeScript types
+
+# CI/CD
+npm run ci            # Run full CI pipeline
 ```
 
 ## 🎯 Roadmap

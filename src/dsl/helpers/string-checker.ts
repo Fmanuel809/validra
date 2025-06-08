@@ -6,8 +6,8 @@
  * @since 1.0.0
  */
 
-import { countGraphemes, isNumber } from "@/utils";
-import { TypeChecker } from "./type-checker";
+import { countGraphemes, isNumber } from '@/utils';
+import { TypeChecker } from './type-checker';
 
 /**
  * Utility class providing static methods for string validation and manipulation operations.
@@ -49,7 +49,7 @@ export class StringChecker {
    */
   static isEmpty(value: string): boolean {
     if (!TypeChecker.isString(value)) {
-      throw "Value must be a string to check if it is empty.";
+      throw 'Value must be a string to check if it is empty.';
     }
 
     return value.trim().length === 0;
@@ -77,7 +77,7 @@ export class StringChecker {
    */
   static contains(value: string, substring: string): boolean {
     if (!TypeChecker.isString(value) || !TypeChecker.isString(substring)) {
-      throw "Both value and substring must be strings for containment check.";
+      throw 'Both value and substring must be strings for containment check.';
     }
 
     return value.includes(substring);
@@ -105,7 +105,7 @@ export class StringChecker {
    */
   static startsWith(value: string, prefix: string): boolean {
     if (!TypeChecker.isString(value) || !TypeChecker.isString(prefix)) {
-      throw "Both value and prefix must be strings for startsWith check.";
+      throw 'Both value and prefix must be strings for startsWith check.';
     }
 
     return value.startsWith(prefix);
@@ -133,7 +133,7 @@ export class StringChecker {
    */
   static endsWith(value: string, suffix: string): boolean {
     if (!TypeChecker.isString(value) || !TypeChecker.isString(suffix)) {
-      throw "Both value and suffix must be strings for endsWith check.";
+      throw 'Both value and suffix must be strings for endsWith check.';
     }
 
     return value.endsWith(suffix);
@@ -163,10 +163,10 @@ export class StringChecker {
    */
   static regexMatch(value: string, pattern: RegExp): boolean {
     if (!TypeChecker.isString(value)) {
-      throw "Value must be a string for regex match.";
+      throw 'Value must be a string for regex match.';
     }
     if (!(pattern instanceof RegExp)) {
-      throw "Pattern must be a valid RegExp object.";
+      throw 'Pattern must be a valid RegExp object.';
     }
 
     return pattern.test(value);
@@ -195,7 +195,7 @@ export class StringChecker {
    */
   static isEmail(value: string): boolean {
     if (!TypeChecker.isString(value)) {
-      throw "Value must be a string to check if it is an email.";
+      throw 'Value must be a string to check if it is an email.';
     }
 
     const emailPattern =
@@ -227,10 +227,9 @@ export class StringChecker {
    */
   static isURL(value: string): boolean {
     if (!TypeChecker.isString(value)) {
-      throw "Value must be a string to check if it is a URL.";
+      throw 'Value must be a string to check if it is a URL.';
     }
-    const urlPattern =
-      /^(https?|ftp|file|ws|wss|ldap|file):\/\/[^\s/$.?#].[^\s]*$/i;
+    const urlPattern = /^(https?|ftp|file|ws|wss|ldap|file):\/\/[^\s/$.?#].[^\s]*$/i;
     return urlPattern.test(value);
   }
 
@@ -257,10 +256,9 @@ export class StringChecker {
    */
   static isUUID(value: string): boolean {
     if (!TypeChecker.isString(value)) {
-      throw "Value must be a string to check if it is a UUID.";
+      throw 'Value must be a string to check if it is a UUID.';
     }
-    const uuidPattern =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     return uuidPattern.test(value);
   }
 
@@ -287,10 +285,10 @@ export class StringChecker {
    */
   static minLength(value: string, minLength: number): boolean {
     if (!TypeChecker.isString(value)) {
-      throw "Value must be a string to check its minimum length.";
+      throw 'Value must be a string to check its minimum length.';
     }
     if (!isNumber(minLength) || minLength < 0) {
-      throw "Minimum length must be a non-negative number.";
+      throw 'Minimum length must be a non-negative number.';
     }
 
     // Use countGraphemes to properly count Unicode characters (including complex emojis)
@@ -320,10 +318,10 @@ export class StringChecker {
    */
   static maxLength(value: string, maxLength: number): boolean {
     if (!TypeChecker.isString(value)) {
-      throw "Value must be a string to check its maximum length.";
+      throw 'Value must be a string to check its maximum length.';
     }
     if (!isNumber(maxLength) || maxLength < 0) {
-      throw "Maximum length must be a non-negative number.";
+      throw 'Maximum length must be a non-negative number.';
     }
 
     // Use countGraphemes to properly count Unicode characters (including complex emojis)

@@ -7,8 +7,8 @@
  */
 export function countGraphemes(str: string): number {
   // Use Intl.Segmenter if available (modern browsers/Node.js)
-  if (typeof Intl !== "undefined" && Intl.Segmenter) {
-    const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
+  if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+    const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
     return Array.from(segmenter.segment(str)).length;
   }
 

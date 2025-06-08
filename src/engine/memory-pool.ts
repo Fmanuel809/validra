@@ -45,7 +45,9 @@ export class ValidraMemoryPool {
    * Return an object to the pool
    */
   return<T>(type: string, obj: T, resetFn?: (obj: T) => void): void {
-    if (!obj) return;
+    if (!obj) {
+      return;
+    }
 
     const pool = this.pools.get(type) || [];
 
@@ -77,8 +79,7 @@ export class ValidraMemoryPool {
     return {
       ...this.metrics,
       totalRequests,
-      hitRate:
-        totalRequests > 0 ? (this.metrics.hits / totalRequests) * 100 : 0,
+      hitRate: totalRequests > 0 ? (this.metrics.hits / totalRequests) * 100 : 0,
       poolSizes: Array.from(this.pools.entries()).reduce(
         (acc, [type, pool]) => {
           acc[type] = pool.length;

@@ -18,7 +18,7 @@
  */
 export class ValidraLogger {
   /** The source identifier for log messages */
-  protected source = "Validra Engine";
+  protected source = 'Validra Engine';
 
   /**
    * Creates a new ValidraLogger instance.
@@ -49,10 +49,7 @@ export class ValidraLogger {
    * ```
    */
   log(message: string, ...optionalParams: any[]): void {
-    console.log(
-      `[${this.getTimestamp()}] [${this.source}] ${message}`,
-      ...optionalParams,
-    );
+    console.log(`[${this.getTimestamp()}] [${this.source}] ${message}`, ...optionalParams);
   }
 
   /**
@@ -67,10 +64,7 @@ export class ValidraLogger {
    * ```
    */
   warn(message: string, ...optionalParams: any[]): void {
-    console.warn(
-      `[${this.getTimestamp()}] [${this.source}] ${message}`,
-      ...optionalParams,
-    );
+    console.warn(`[${this.getTimestamp()}] [${this.source}] ${message}`, ...optionalParams);
   }
 
   /**
@@ -91,10 +85,7 @@ export class ValidraLogger {
    */
   error(message: string, ...optionalParams: any[]): void {
     const timestamp = this.getTimestamp();
-    console.error(
-      `[${timestamp}] [${this.source}] ${message}`,
-      ...optionalParams,
-    );
+    console.error(`[${timestamp}] [${this.source}] ${message}`, ...optionalParams);
     throw new Error(`[${timestamp}] [${this.source}] ${message}`);
   }
 
@@ -110,10 +101,7 @@ export class ValidraLogger {
    * ```
    */
   info(message: string, ...optionalParams: any[]): void {
-    console.info(
-      `[${this.getTimestamp()}] [${this.source}] ${message}`,
-      ...optionalParams,
-    );
+    console.info(`[${this.getTimestamp()}] [${this.source}] ${message}`, ...optionalParams);
   }
 
   /**
@@ -128,10 +116,7 @@ export class ValidraLogger {
    * ```
    */
   debug(message: string, ...optionalParams: any[]): void {
-    console.debug(
-      `[${this.getTimestamp()}] [${this.source}] ${message}`,
-      ...optionalParams,
-    );
+    console.debug(`[${this.getTimestamp()}] [${this.source}] ${message}`, ...optionalParams);
   }
 
   /**
@@ -146,10 +131,7 @@ export class ValidraLogger {
    * ```
    */
   trace(message: string, ...optionalParams: any[]): void {
-    console.trace(
-      `[${this.getTimestamp()}] [${this.source}] ${message}`,
-      ...optionalParams,
-    );
+    console.trace(`[${this.getTimestamp()}] [${this.source}] ${message}`, ...optionalParams);
   }
 
   /**
