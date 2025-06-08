@@ -354,7 +354,7 @@ const AVAILABLE_HELPERS = [
  * Pre-built Map containing all helpers for fast access
  */
 const HELPERS_MAP = new Map(
-  AVAILABLE_HELPERS.map((helper) => [helper.name, helper])
+  AVAILABLE_HELPERS.map((helper) => [helper.name, helper]),
 );
 
 /**
@@ -467,7 +467,7 @@ export const helpersActions = {
    * @throws {Error} When no helper with the specified name is found
    */
   getHelperResolverSchema: <T extends HelperName>(
-    helperName: T
+    helperName: T,
   ): HelperResolverSchema => {
     const helper = HELPERS_MAP.get(helperName);
     if (!helper) {

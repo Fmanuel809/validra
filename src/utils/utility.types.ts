@@ -1,9 +1,9 @@
 /**
  * Union type representing flat primitive values supported by Validra.
- * 
+ *
  * This type includes the basic data types that can be used in validation
  * operations and comparisons throughout the Validra library.
- * 
+ *
  * @example
  * ```typescript
  * // Valid flatValues

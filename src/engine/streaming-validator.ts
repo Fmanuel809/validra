@@ -1,11 +1,17 @@
 import { ValidraResult } from "./interfaces";
-import { StreamingValidationResult, StreamingValidationOptions, StreamingValidationSummary } from "./interfaces/streaming-result";
+import {
+  StreamingValidationResult,
+  StreamingValidationOptions,
+  StreamingValidationSummary,
+} from "./interfaces/streaming-result";
 
 /**
  * Streaming validation for large datasets with constant memory usage
  */
 export class ValidraStreamingValidator<T extends Record<string, any>> {
-  private readonly onChunkComplete?: (result: StreamingValidationResult<any>) => void;
+  private readonly onChunkComplete?: (
+    result: StreamingValidationResult<any>,
+  ) => void;
   private readonly onComplete?: (summary: StreamingValidationSummary) => void;
 
   constructor(options: StreamingValidationOptions = {}) {
@@ -20,10 +26,16 @@ export class ValidraStreamingValidator<T extends Record<string, any>> {
   /**
    * Validate a stream of data with generator pattern for memory efficiency
    */
-  async* validateStream<TData extends Record<string, any>>(
+  async *validateStream<TData extends Record<string, any>>(
     dataStream: Iterable<TData> | AsyncIterable<TData>,
-    validator: (chunk: TData) => ValidraResult<TData> | Promise<ValidraResult<TData>>
-  ): AsyncGenerator<StreamingValidationResult<TData>, StreamingValidationSummary, unknown> {
+    validator: (
+      chunk: TData,
+    ) => ValidraResult<TData> | Promise<ValidraResult<TData>>,
+  ): AsyncGenerator<
+    StreamingValidationResult<TData>,
+    StreamingValidationSummary,
+    unknown
+  > {
     const startTime = performance.now();
     let totalProcessed = 0;
     let totalValid = 0;
@@ -36,14 +48,16 @@ export class ValidraStreamingValidator<T extends Record<string, any>> {
     for await (const item of dataStream) {
       try {
         const validationResult = await validator(item);
-        
+
         const streamResult: StreamingValidationResult<TData> = {
           chunk: item,
           index: processedCount,
           isValid: validationResult.isValid,
-          errors: validationResult.errors ? this.convertErrors(validationResult.errors) : {},
+          errors: validationResult.errors
+            ? this.convertErrors(validationResult.errors)
+            : {},
           isComplete: false,
-          totalProcessed: processedCount + 1
+          totalProcessed: processedCount + 1,
         };
 
         totalProcessed++;
@@ -70,9 +84,13 @@ export class ValidraStreamingValidator<T extends Record<string, any>> {
           chunk: item,
           index: processedCount,
           isValid: false,
-          errors: { validation: [`Validation error: ${error instanceof Error ? error.message : String(error)}`] },
+          errors: {
+            validation: [
+              `Validation error: ${error instanceof Error ? error.message : String(error)}`,
+            ],
+          },
           isComplete: false,
-          totalProcessed: processedCount + 1
+          totalProcessed: processedCount + 1,
         };
 
         totalProcessed++;
@@ -93,7 +111,8 @@ export class ValidraStreamingValidator<T extends Record<string, any>> {
       totalInvalid,
       totalErrors,
       processingTime,
-      averageTimePerItem: totalProcessed > 0 ? processingTime / totalProcessed : 0
+      averageTimePerItem:
+        totalProcessed > 0 ? processingTime / totalProcessed : 0,
     };
 
     // Call completion callback
@@ -109,12 +128,12 @@ export class ValidraStreamingValidator<T extends Record<string, any>> {
    */
   private convertErrors(errors: any): Record<string, string[]> {
     if (Object.keys(errors).length === 0) return {};
-    
+
     const converted: Record<string, string[]> = {};
     for (const [key, value] of Object.entries(errors)) {
       if (Array.isArray(value)) {
-        converted[key] = value.map((err: any) => 
-          typeof err === 'string' ? err : err.message || String(err)
+        converted[key] = value.map((err: any) =>
+          typeof err === "string" ? err : err.message || String(err),
         );
       } else {
         converted[key] = [String(value)];

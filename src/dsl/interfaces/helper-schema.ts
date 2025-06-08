@@ -1,12 +1,12 @@
 export interface HelperResolverSchema {
-    resolver: Function;
-    async: boolean;
-    params: readonly string[];
+  resolver: Function;
+  async: boolean;
+  params: readonly string[];
 }
 
 export interface HelperSchema {
-    name: string;
-    description: string;
-    example: string;
-    category: string;
+  name: string;
+  description: string;
+  example: string;
+  category: string;
 }

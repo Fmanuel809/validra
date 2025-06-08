@@ -9,7 +9,7 @@ export class ValidraMemoryPool {
     hits: 0,
     misses: 0,
     allocations: 0,
-    returns: 0
+    returns: 0,
   };
 
   constructor(maxSize: number = 100) {
@@ -21,23 +21,23 @@ export class ValidraMemoryPool {
    */
   get<T>(type: string, factory: () => T): T {
     const pool = this.pools.get(type);
-    
+
     if (pool && pool.length > 0) {
       this.metrics.hits++;
       return pool.pop() as T;
     }
-    
+
     this.metrics.misses++;
     this.metrics.allocations++;
-    
+
     // Just create the object without pre-allocation to reduce overhead
     const newObj = factory();
-    
+
     // Initialize empty pool only if it doesn't exist
     if (!pool) {
       this.pools.set(type, []);
     }
-    
+
     return newObj;
   }
 
@@ -46,15 +46,15 @@ export class ValidraMemoryPool {
    */
   return<T>(type: string, obj: T, resetFn?: (obj: T) => void): void {
     if (!obj) return;
-    
+
     const pool = this.pools.get(type) || [];
-    
+
     if (pool.length < this.maxSize) {
       // Reset object state if reset function provided
       if (resetFn) {
         resetFn(obj);
       }
-      
+
       pool.push(obj);
       this.pools.set(type, pool);
       this.metrics.returns++;
@@ -77,11 +77,15 @@ export class ValidraMemoryPool {
     return {
       ...this.metrics,
       totalRequests,
-      hitRate: totalRequests > 0 ? (this.metrics.hits / totalRequests) * 100 : 0,
-      poolSizes: Array.from(this.pools.entries()).reduce((acc, [type, pool]) => {
-        acc[type] = pool.length;
-        return acc;
-      }, {} as Record<string, number>)
+      hitRate:
+        totalRequests > 0 ? (this.metrics.hits / totalRequests) * 100 : 0,
+      poolSizes: Array.from(this.pools.entries()).reduce(
+        (acc, [type, pool]) => {
+          acc[type] = pool.length;
+          return acc;
+        },
+        {} as Record<string, number>,
+      ),
     };
   }
 
@@ -103,24 +107,24 @@ export const MemoryPoolFactories = {
   validationResult: () => ({
     isValid: true,
     data: null,
-    errors: {}
+    errors: {},
   }),
-  
+
   resetValidationResult: (result: any) => {
     result.isValid = true;
     result.data = null;
     result.errors = {};
   },
-  
+
   errorArray: () => [] as string[],
-  
+
   resetErrorArray: (arr: string[]) => {
     arr.length = 0;
   },
-  
+
   argumentsArray: () => [] as unknown[],
-  
+
   resetArgumentsArray: (arr: unknown[]) => {
     arr.length = 0;
-  }
+  },
 };
