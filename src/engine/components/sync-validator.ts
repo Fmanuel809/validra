@@ -1,6 +1,7 @@
 import { helpersActions } from '@/dsl';
 import { ValidraLogger } from '@/utils/validra-logger';
 import { IDataExtractor } from '../interfaces/data-extractor.interface';
+import { IMemoryPoolManager } from '../interfaces/memory-pool-manager.interface';
 import { ISyncValidator } from '../interfaces/validators.interface';
 import { ValidraResult } from '../interfaces/validra-result';
 import { Rule } from '../rule';
@@ -21,18 +22,23 @@ export class SyncValidator implements ISyncValidator {
     throwOnUnknownField?: boolean;
   };
   private readonly dataExtractor: IDataExtractor;
+  private readonly memoryPoolManager: IMemoryPoolManager;
 
   /**
    * Creates a new SyncValidator instance.
    * @param options Optional configuration for debugging, partial validation, and error handling.
+   * @param dataExtractor Data extractor for value extraction.
+   * @param memoryPoolManager Memory pool manager for object reuse.
    */
   constructor(
     options: { debug?: boolean; allowPartialValidation?: boolean; throwOnUnknownField?: boolean } = {},
     dataExtractor: IDataExtractor,
+    memoryPoolManager: IMemoryPoolManager,
   ) {
     this.logger = new ValidraLogger('SyncValidator');
     this.options = options;
     this.dataExtractor = dataExtractor;
+    this.memoryPoolManager = memoryPoolManager;
   }
 
   /**
@@ -89,11 +95,24 @@ export class SyncValidator implements ISyncValidator {
     const startTime = performance.now();
     const { failFast = false, maxErrors = Infinity } = options || {};
 
-    const result: ValidraResult<T> = {
-      isValid: true,
-      data,
-      errors: {},
-    };
+    // Get validation result from pool if conditions are met
+    let result: ValidraResult<T>;
+    const usePoolForResult = this.memoryPoolManager.shouldPoolValidationResult(rules.length);
+
+    if (usePoolForResult) {
+      result = this.memoryPoolManager.getValidationResult() as ValidraResult<T>;
+      // Reset result for reuse
+      result.isValid = true;
+      result.data = data;
+      result.errors = {};
+      delete result.message;
+    } else {
+      result = {
+        isValid: true,
+        data,
+        errors: {},
+      };
+    }
 
     let errorCount = 0;
 
@@ -102,6 +121,7 @@ export class SyncValidator implements ISyncValidator {
         failFast,
         maxErrors,
         dataKeys: Object.keys(data),
+        usePoolForResult,
       });
     }
 
@@ -110,11 +130,32 @@ export class SyncValidator implements ISyncValidator {
         // Extract field value and parameters
         const pathSegments = this.dataExtractor.getPathSegments(rule.field);
         const value = this.dataExtractor.getValue(data, pathSegments);
-        let args: unknown[] = [];
+
+        // Get arguments array from pool if conditions are met
+        let args: unknown[];
+        let usePoolForArgs = false;
+
         if ('params' in rule && (rule as any).params !== undefined) {
-          args = Object.values((rule as any).params);
+          const paramValues = Object.values((rule as any).params);
+          usePoolForArgs = this.memoryPoolManager.shouldPoolArguments(paramValues.length);
+
+          if (usePoolForArgs) {
+            args = this.memoryPoolManager.getArgumentsArray();
+            args.length = 0; // Clear array
+            args.push(...paramValues);
+          } else {
+            args = paramValues;
+          }
+        } else {
+          args = [];
         }
+
         const isValid = this.applyRule(rule, value, args);
+
+        // Return args to pool if we got them from pool
+        if (usePoolForArgs) {
+          this.memoryPoolManager.returnArgumentsArray(args);
+        }
 
         if (!isValid) {
           result.isValid = false;
@@ -164,6 +205,7 @@ export class SyncValidator implements ISyncValidator {
       this.logger.debug(`Sync validation completed in ${duration.toFixed(2)}ms`, {
         isValid: result.isValid,
         errorsFound: result.errors ? Object.keys(result.errors).length : 0,
+        usePoolForResult,
       });
     }
 

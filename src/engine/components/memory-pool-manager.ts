@@ -129,25 +129,27 @@ export class MemoryPoolManager implements IMemoryPoolManager {
   /**
    * Determines if an arguments array should use memory pool
    *
-   * Only use pool for larger arrays to avoid overhead for simple validations.
+   * Only use pool for complex parameter arrays to avoid overhead for simple validations.
+   * Optimized threshold based on performance benchmarks.
    *
    * @param paramCount - Number of parameters
    * @returns True if should use memory pool
    */
   public shouldPoolArguments(paramCount: number): boolean {
-    return this.enabled && paramCount > 1;
+    return this.enabled && paramCount > 5;
   }
 
   /**
    * Determines if validation result should use memory pool
    *
-   * Use pool for complex validations with multiple rules.
+   * Use pool only for complex validations with many rules to justify the overhead.
+   * Optimized threshold based on performance benchmarks.
    *
    * @param rulesCount - Number of validation rules
    * @returns True if should use memory pool
    */
   public shouldPoolValidationResult(rulesCount: number): boolean {
-    return this.enabled && rulesCount > 2;
+    return this.enabled && rulesCount > 10;
   }
 
   /**

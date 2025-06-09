@@ -7,16 +7,26 @@ describe('SyncValidator', () => {
     getValue: (data: any, path: string[]) => (data && path[0] ? data[path[0]] : undefined),
     getPathSegments: (field: string) => [field],
   };
+
+  const mockMemoryPoolManager = {
+    shouldPoolValidationResult: vi.fn(() => false),
+    shouldPoolArguments: vi.fn(() => false),
+    getValidationResult: vi.fn(() => ({ isValid: true, data: null, errors: {} })),
+    returnValidationResult: vi.fn(),
+    getArgumentsArray: vi.fn(() => []),
+    returnArgumentsArray: vi.fn(),
+  };
+
   const rule = { op: 'eq', field: 'x', params: { value: 1 } } as any;
 
   it('applies rule and returns true', () => {
-    const validator = new SyncValidator({}, mockDataExtractor as any);
+    const validator = new SyncValidator({}, mockDataExtractor as any, mockMemoryPoolManager as any);
     const result = validator.applyRule(rule as any, 1, [1]);
     expect(typeof result).toBe('boolean');
   });
 
   it('throws error for unknown operation (mocked helper)', () => {
-    const validator = new SyncValidator({}, mockDataExtractor as any);
+    const validator = new SyncValidator({}, mockDataExtractor as any, mockMemoryPoolManager as any);
     const spy = vi
       .spyOn(helpersActionsModule.helpersActions, 'getHelperResolverSchema')
       .mockReturnValueOnce(undefined as any);
@@ -27,7 +37,7 @@ describe('SyncValidator', () => {
 
   it('logs debug message when debug is enabled and rule fails', () => {
     const loggerSpy = { debug: vi.fn() };
-    const validator = new SyncValidator({ debug: true }, mockDataExtractor as any);
+    const validator = new SyncValidator({ debug: true }, mockDataExtractor as any, mockMemoryPoolManager as any);
     // @ts-expect-error: override logger for test
     validator.logger = loggerSpy;
     const badRule = { ...rule, op: 'nonexistent' };
@@ -43,7 +53,7 @@ describe('SyncValidator', () => {
 
   it('logs debug message when stopping early (failFast)', () => {
     const loggerSpy = { debug: vi.fn(), warn: vi.fn() };
-    const validator = new SyncValidator({ debug: true }, mockDataExtractor as any);
+    const validator = new SyncValidator({ debug: true }, mockDataExtractor as any, mockMemoryPoolManager as any);
     // @ts-expect-error: override logger for test
     validator.logger = loggerSpy;
     const alwaysFailRule = { ...rule, op: 'eq', negative: true };
@@ -56,7 +66,7 @@ describe('SyncValidator', () => {
 
   it('logs warn when error in rule and debug enabled', () => {
     const loggerSpy = { debug: vi.fn(), warn: vi.fn() };
-    const validator = new SyncValidator({ debug: true }, mockDataExtractor as any);
+    const validator = new SyncValidator({ debug: true }, mockDataExtractor as any, mockMemoryPoolManager as any);
     // @ts-expect-error: override logger for test
     validator.logger = loggerSpy;
     const badRule = { ...rule, op: 'nonexistent' };
@@ -72,7 +82,11 @@ describe('SyncValidator', () => {
   });
 
   it('throws if throwOnUnknownField and !allowPartialValidation', () => {
-    const validator = new SyncValidator({ throwOnUnknownField: true }, mockDataExtractor as any);
+    const validator = new SyncValidator(
+      { throwOnUnknownField: true },
+      mockDataExtractor as any,
+      mockMemoryPoolManager as any,
+    );
     const badRule = { ...rule, op: 'nonexistent' };
     expect(() => validator.validate({ x: 1 }, [badRule])).toThrow('Rule validation failed for field "x"');
   });
@@ -81,13 +95,14 @@ describe('SyncValidator', () => {
     const validator = new SyncValidator(
       { throwOnUnknownField: true, allowPartialValidation: false },
       mockDataExtractor as any,
+      mockMemoryPoolManager as any,
     );
     const badRule = { ...rule, op: 'nonexistent' };
     expect(() => validator.validate({ x: 1 }, [badRule])).toThrow('Rule validation failed for field "x"');
   });
 
   it('addError initializes errors if undefined', () => {
-    const validator = new SyncValidator({}, mockDataExtractor as any);
+    const validator = new SyncValidator({}, mockDataExtractor as any, mockMemoryPoolManager as any);
     const result: any = { isValid: false, data: { x: 1 } };
     validator['addError'](result, rule, 'custom');
     expect(result.errors).toBeDefined();
@@ -96,7 +111,7 @@ describe('SyncValidator', () => {
 
   it('stops validation early when maxErrors is reached', () => {
     const loggerSpy = { debug: vi.fn(), warn: vi.fn() };
-    const validator = new SyncValidator({ debug: true }, mockDataExtractor as any);
+    const validator = new SyncValidator({ debug: true }, mockDataExtractor as any, mockMemoryPoolManager as any);
     // @ts-expect-error: override logger for test
     validator.logger = loggerSpy;
     const alwaysFailRule = { ...rule, op: 'eq', negative: true };

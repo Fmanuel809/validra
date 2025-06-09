@@ -53,18 +53,20 @@ describe('MemoryPoolManager', () => {
       expect(pooled.length).toBe(0);
     });
 
-    it('shouldPoolArguments returns true only for paramCount > 1', () => {
+    it('shouldPoolArguments returns true only for paramCount > 5', () => {
       expect(manager.shouldPoolArguments(0)).toBe(false);
       expect(manager.shouldPoolArguments(1)).toBe(false);
-      expect(manager.shouldPoolArguments(2)).toBe(true);
+      expect(manager.shouldPoolArguments(5)).toBe(false);
+      expect(manager.shouldPoolArguments(6)).toBe(true);
       expect(manager.shouldPoolArguments(10)).toBe(true);
     });
 
-    it('shouldPoolValidationResult returns true only for rulesCount > 2', () => {
+    it('shouldPoolValidationResult returns true only for rulesCount > 10', () => {
       expect(manager.shouldPoolValidationResult(0)).toBe(false);
-      expect(manager.shouldPoolValidationResult(2)).toBe(false);
-      expect(manager.shouldPoolValidationResult(3)).toBe(true);
-      expect(manager.shouldPoolValidationResult(10)).toBe(true);
+      expect(manager.shouldPoolValidationResult(5)).toBe(false);
+      expect(manager.shouldPoolValidationResult(10)).toBe(false);
+      expect(manager.shouldPoolValidationResult(11)).toBe(true);
+      expect(manager.shouldPoolValidationResult(20)).toBe(true);
     });
 
     it('clear empties all pools and resets metrics', () => {
@@ -138,11 +140,11 @@ describe('MemoryPoolManager', () => {
     });
 
     it('shouldPoolArguments always returns false', () => {
-      expect(manager.shouldPoolArguments(10)).toBe(false);
+      expect(manager.shouldPoolArguments(20)).toBe(false);
     });
 
     it('shouldPoolValidationResult always returns false', () => {
-      expect(manager.shouldPoolValidationResult(10)).toBe(false);
+      expect(manager.shouldPoolValidationResult(20)).toBe(false);
     });
 
     it('clear does not throw', () => {

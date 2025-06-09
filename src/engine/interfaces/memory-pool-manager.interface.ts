@@ -124,4 +124,20 @@ export interface IMemoryPoolManager {
    * @returns True if memory pool is enabled
    */
   isEnabled(): boolean;
+
+  /**
+   * Determines if an arguments array should use memory pool
+   *
+   * @param paramCount - Number of parameters
+   * @returns True if should use memory pool
+   */
+  shouldPoolArguments(paramCount: number): boolean;
+
+  /**
+   * Determines if validation result should use memory pool
+   *
+   * @param rulesCount - Number of validation rules
+   * @returns True if should use memory pool
+   */
+  shouldPoolValidationResult(rulesCount: number): boolean;
 }

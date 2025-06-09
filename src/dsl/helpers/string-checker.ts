@@ -345,7 +345,12 @@ export class StringChecker {
    *
    * @since 1.0.0
    */
-  static minLength(value: string, minLength: number): boolean {
+  static minLength(value: string | undefined, minLength: number): boolean {
+    // Allow undefined values (optional fields)
+    if (value === undefined) {
+      return true;
+    }
+
     if (!TypeChecker.isString(value)) {
       throw 'Value must be a string to check its minimum length.';
     }
@@ -359,13 +364,14 @@ export class StringChecker {
 
   /**
    * Checks if a string does not exceed the maximum length requirement after trimming whitespace.
+   * Returns true for undefined values (optional fields).
    *
    * @public
    * @static
-   * @param {string} value - The string to check
+   * @param {string | undefined} value - The string to check (undefined is treated as valid)
    * @param {number} maxLength - The maximum allowed length (must be non-negative)
-   * @returns {boolean} True if the trimmed string length is less than or equal to maxLength, false otherwise
-   * @throws {string} Throws if value is not a string or maxLength is not a non-negative number
+   * @returns {boolean} True if the trimmed string length is less than or equal to maxLength, or if value is undefined, false otherwise
+   * @throws {string} Throws if value is not a string/undefined or maxLength is not a non-negative number
    *
    * @example
    * ```typescript
@@ -374,11 +380,17 @@ export class StringChecker {
    * StringChecker.maxLength("  hello  ", 5); // true (trimmed: "hello" = 5 <= 5)
    * StringChecker.maxLength("", 0); // true (0 <= 0)
    * StringChecker.maxLength("test", 100); // true (4 <= 100)
+   * StringChecker.maxLength(undefined, 50); // true (optional field)
    * ```
    *
    * @since 1.0.0
    */
-  static maxLength(value: string, maxLength: number): boolean {
+  static maxLength(value: string | undefined, maxLength: number): boolean {
+    // Allow undefined values (optional fields)
+    if (value === undefined) {
+      return true;
+    }
+
     if (!TypeChecker.isString(value)) {
       throw 'Value must be a string to check its maximum length.';
     }

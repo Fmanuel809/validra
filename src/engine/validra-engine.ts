@@ -126,6 +126,7 @@ export class ValidraEngine {
           throwOnUnknownField: this.options.throwOnUnknownField,
         },
         this.dataExtractor,
+        this.memoryPoolManager,
       );
 
     this.asyncValidator =

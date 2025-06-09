@@ -26,7 +26,8 @@ export class AsyncValidator implements IAsyncValidator {
    * Applies a single rule asynchronously to a value
    */
   async applyRuleAsync(rule: Rule, value: unknown, args: unknown[]): Promise<boolean> {
-    console.debug(`Applying rule: ${rule} with value:`, value, 'and args:', args);
+    const ruleInfo = `${rule.op}${rule.field ? ` on field "${rule.field}"` : ''}${rule.negative ? ' (negated)' : ''}`;
+    console.debug(`Applying rule: ${ruleInfo} with value:`, value, 'and args:', args);
     return new Promise((resolve, reject) => {
       try {
         setTimeout(() => {
@@ -98,7 +99,22 @@ export class AsyncValidator implements IAsyncValidator {
           const ruleParams = (compiledRule.original as any).params;
           if (ruleParams !== undefined && ruleParams !== null) {
             const values = Object.values(ruleParams) as unknown[];
-            args.push(...values);
+            // Special handling for regexMatch operation
+            if (compiledRule.original.op === 'regexMatch' && values.length > 0) {
+              const regexParam = values[0];
+              if (typeof regexParam === 'string') {
+                // Convert string regex to RegExp object
+                try {
+                  args.push(new RegExp(regexParam));
+                } catch {
+                  throw new Error(`Invalid regex pattern: ${regexParam}`);
+                }
+              } else {
+                args.push(...values);
+              }
+            } else {
+              args.push(...values);
+            }
           }
 
           // Apply rule asynchronously
