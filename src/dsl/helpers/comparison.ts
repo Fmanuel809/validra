@@ -1,43 +1,83 @@
-// Numerical comparison utilities for the Validra library.
-// Author: Felix M. Martinez
-//
-// This module exports the Comparison class with static methods for performing
-// numerical comparisons and range validations.
-//
-// Example usage:
-//   Comparison.isGreaterThan(10, 5);
-//   Comparison.between(5, 1, 10);
-//
-// Version: 1.0.0
-//
+/**
+ * @fileoverview Provides comprehensive numerical comparison and range validation utilities
+ * @module Comparison
+ * @version 1.0.0
+ * @author Felix M. Martinez
+ * @since 1.0.0
+ */
 
 import { isNullOrUndefined, isNumber } from '@/utils';
 
 /**
  * Utility class for performing numerical comparisons and range validations.
  *
- * Provides static methods to compare numbers with proper type validation
- * and error handling. All methods validate inputs and throw descriptive
- * errors for invalid values.
+ * Provides static methods to compare numbers with comprehensive type validation
+ * and error handling. All methods validate inputs to ensure they are valid numbers
+ * and throw descriptive errors for invalid values, ensuring reliable operation
+ * in business rule validation scenarios.
  *
- * @example
+ * The class supports all standard numerical comparison operations including
+ * greater than, less than, greater/less than or equal, and range validations
+ * (between/not between operations).
+ *
+ * @example Basic Numerical Comparisons
  * ```typescript
- * // Basic comparisons
+ * // Standard comparisons
  * Comparison.isGreaterThan(10, 5);        // true
  * Comparison.isLessThan(3, 8);            // true
  * Comparison.isGreaterThanOrEqual(5, 5);  // true
  * Comparison.isLessThanOrEqual(4, 7);     // true
  *
- * // Range validations
- * Comparison.between(5, 1, 10);           // true
- * Comparison.notBetween(15, 1, 10);       // true
- *
- * // Error handling
- * Comparison.isGreaterThan(null, 5);      // throws Error
- * Comparison.isGreaterThan("10", 5);      // throws Error
+ * // Decimal and negative number support
+ * Comparison.isGreaterThan(3.14, 3.1);    // true
+ * Comparison.isLessThan(-10, -5);         // true
  * ```
  *
+ * @example Range Validation Operations
+ * ```typescript
+ * // Inclusive range checking
+ * Comparison.between(5, 1, 10);           // true (5 is between 1 and 10)
+ * Comparison.between(1, 1, 10);           // true (boundary inclusive)
+ * Comparison.between(10, 1, 10);          // true (boundary inclusive)
+ * Comparison.between(0, 1, 10);           // false (outside range)
+ *
+ * // Exclusive range checking
+ * Comparison.notBetween(15, 1, 10);       // true (15 is not between 1 and 10)
+ * Comparison.notBetween(5, 1, 10);        // false (5 is between 1 and 10)
+ * ```
+ *
+ * @example Input Validation and Error Handling
+ * ```typescript
+ * // These will throw descriptive errors:
+ * Comparison.isGreaterThan(null, 5);      // throws Error: values must be provided
+ * Comparison.isGreaterThan("10", 5);      // throws Error: values must be numbers
+ * Comparison.isGreaterThan(NaN, 5);       // throws Error: values must be numbers
+ * Comparison.between(5, null, 10);        // throws Error: all values must be provided
+ * ```
+ *
+ * @example Real-world Usage in Validation Rules
+ * ```typescript
+ * // Age validation
+ * const age = 25;
+ * const isAdult = Comparison.isGreaterThanOrEqual(age, 18); // true
+ * const isSenior = Comparison.isGreaterThanOrEqual(age, 65); // false
+ *
+ * // Price range validation
+ * const price = 49.99;
+ * const isAffordable = Comparison.between(price, 10, 100); // true
+ *
+ * // Score validation
+ * const score = 85;
+ * const isPassing = Comparison.isGreaterThanOrEqual(score, 60); // true
+ * const isExcellent = Comparison.isGreaterThan(score, 90); // false
+ * ```
+ *
+ * @see {@link Equality} for equality and inequality comparisons
+ * @see {@link TypeChecker.isNumber} for number type validation
+ * @see {@link DateMatcher} for date-specific comparisons
+ *
  * @public
+ * @since 1.0.0
  */
 
 export class Comparison {
@@ -174,27 +214,68 @@ export class Comparison {
   }
 
   /**
-   * Checks if a value is within a specified range (inclusive).
+   * Validates whether a value falls within a specified inclusive range.
    *
-   * Validates that the value is between the minimum and maximum values,
-   * including the boundaries. All three values must be valid numbers.
+   * This method checks if a given numeric value is between (and including)
+   * the specified minimum and maximum boundaries. Both boundaries are inclusive,
+   * meaning the value can equal either the minimum or maximum and still be
+   * considered within range.
    *
-   * @param value - The value to check
-   * @param min - The minimum value of the range (inclusive)
-   * @param max - The maximum value of the range (inclusive)
-   * @returns `true` if value is between min and max (inclusive), `false` otherwise
-   * @throws {Error} When any value is null, undefined, or not a number
+   * All three parameters must be valid numbers, and the method provides
+   * comprehensive input validation with descriptive error messages.
    *
-   * @example
+   * @param value - The numeric value to test against the range
+   * @param min - The minimum boundary of the range (inclusive)
+   * @param max - The maximum boundary of the range (inclusive)
+   * @returns `true` if the value is within the inclusive range, `false` otherwise
+   *
+   * @throws {Error} When any parameter is null, undefined, or not a valid number
+   *
+   * @example Basic Range Validation
    * ```typescript
-   * Comparison.between(5, 1, 10);              // true
-   * Comparison.between(1, 1, 10);              // true (inclusive)
-   * Comparison.between(10, 1, 10);             // true (inclusive)
-   * Comparison.between(0, 1, 10);              // false
-   * Comparison.between(15, 1, 10);             // false
+   * Comparison.between(5, 1, 10);              // true (within range)
+   * Comparison.between(1, 1, 10);              // true (equals minimum boundary)
+   * Comparison.between(10, 1, 10);             // true (equals maximum boundary)
+   * Comparison.between(0, 1, 10);              // false (below minimum)
+   * Comparison.between(15, 1, 10);             // false (above maximum)
    * ```
    *
+   * @example Decimal and Negative Number Support
+   * ```typescript
+   * Comparison.between(3.5, 3.0, 4.0);         // true
+   * Comparison.between(-5, -10, 0);            // true (negative ranges)
+   * Comparison.between(2.99, 3.0, 4.0);        // false (just below minimum)
+   * ```
+   *
+   * @example Real-world Applications
+   * ```typescript
+   * // Age range validation
+   * const age = 25;
+   * const isWorkingAge = Comparison.between(age, 18, 65); // true
+   *
+   * // Grade validation (0-100 scale)
+   * const grade = 85;
+   * const isValidGrade = Comparison.between(grade, 0, 100); // true
+   *
+   * // Temperature range check
+   * const temperature = 22.5;
+   * const isComfortable = Comparison.between(temperature, 20, 25); // true
+   * ```
+   *
+   * @example Error Handling
+   * ```typescript
+   * // These will throw descriptive errors:
+   * Comparison.between(null, 1, 10);           // Error: values must be provided
+   * Comparison.between(5, "1", 10);            // Error: values must be numbers
+   * Comparison.between(5, 1, undefined);       // Error: values must be provided
+   * ```
+   *
+   * @see {@link notBetween} for exclusive range validation
+   * @see {@link isGreaterThanOrEqual} for minimum boundary checking
+   * @see {@link isLessThanOrEqual} for maximum boundary checking
+   *
    * @public
+   * @since 1.0.0
    */
   static between(value: number, min: number, max: number): boolean {
     if (isNullOrUndefined(value) || isNullOrUndefined(min) || isNullOrUndefined(max)) {

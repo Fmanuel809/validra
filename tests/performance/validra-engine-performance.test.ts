@@ -1,8 +1,6 @@
 import type { Rule } from '@/engine/rule';
 import { ValidraEngine } from '@/engine/validra-engine';
-import * as fs from 'fs';
-import * as path from 'path';
-import { afterAll, describe, it } from 'vitest';
+import { describe, it } from 'vitest';
 import generateTestData from './data-generators';
 import { collectPerformance } from './metrics-collector';
 
@@ -97,7 +95,7 @@ describe('ValidraEngine Performance', () => {
     }
   }
 
-  afterAll(() => {
+  /* afterAll(() => {
     // Unifica todas las métricas en una sola tabla
     const configs = allResults.map(r => `${r['🔧 Configuración']} (${r['📊 Tamaño dataset']})`);
     // Elimina emojis y deja nombres simples de métricas
@@ -140,5 +138,5 @@ describe('ValidraEngine Performance', () => {
     const outPath = path.join(__dirname, '../../PERFORMANCE_RESULT.md');
     fs.writeFileSync(outPath, md, 'utf8');
     console.log(`\nResultados exportados a: ${outPath}`);
-  });
+  }); */
 });

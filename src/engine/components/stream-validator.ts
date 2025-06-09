@@ -1,3 +1,11 @@
+/**
+ * @fileoverview Streaming validation component for processing large datasets with memory efficiency
+ * @module StreamValidator
+ * @version 1.0.0
+ * @author Validra Team
+ * @since 1.0.0
+ */
+
 import type { IDataExtractor } from '../interfaces/data-extractor.interface';
 import type { IMemoryPoolManager } from '../interfaces/memory-pool-manager.interface';
 import type { IRuleCompiler } from '../interfaces/rule-compiler.interface';
@@ -5,15 +13,93 @@ import type { IStreamValidator, StreamingValidationOptions } from '../interfaces
 import type { ValidraResult } from '../interfaces/validra-result';
 
 /**
- * StreamValidator handles streaming validation operations
- * Optimized for processing large datasets with memory efficiency
+ * Streaming validator component optimized for processing large datasets with memory efficiency.
+ *
+ * Handles validation of large data streams using generator patterns and chunked processing
+ * to minimize memory usage while maintaining high performance. Supports both synchronous
+ * and asynchronous data sources with configurable chunk sizes and progress callbacks.
+ *
+ * Key features:
+ * - **Memory Efficient**: Uses generator patterns to process data in chunks
+ * - **Flexible Input**: Supports both Iterable and AsyncIterable data sources
+ * - **Progress Tracking**: Provides real-time progress callbacks and statistics
+ * - **Error Resilience**: Continues processing even when individual items fail
+ * - **Configurable Chunking**: Adjustable chunk sizes for optimal performance
+ * - **Resource Management**: Integrates with memory pool for object reuse
+ *
+ * @public
+ * @since 1.0.0
+ *
+ * @example
+ * ```typescript
+ * const ruleCompiler = new RuleCompiler();
+ * const dataExtractor = new DataExtractor();
+ * const memoryPoolManager = new MemoryPoolManager();
+ *
+ * const streamValidator = new StreamValidator(
+ *   ruleCompiler,
+ *   dataExtractor,
+ *   memoryPoolManager
+ * );
+ *
+ * // Stream validation with progress tracking
+ * const dataStream = generateLargeDataset(); // Returns AsyncIterable<User>
+ * const validator = (user: User) => validateUser(user);
+ *
+ * const options: StreamingValidationOptions = {
+ *   chunkSize: 500,
+ *   onChunkComplete: ({ processed, errors }) => {
+ *     console.log(`Processed: ${processed}, Errors: ${errors}`);
+ *   },
+ *   onComplete: ({ totalProcessed, successRate }) => {
+ *     console.log(`Total: ${totalProcessed}, Success: ${successRate}%`);
+ *   }
+ * };
+ *
+ * // Process stream
+ * for await (const result of streamValidator.validateStream(dataStream, validator, options)) {
+ *   if (!result.isValid) {
+ *     console.log('Validation failed:', result.errors);
+ *   }
+ * }
+ *
+ * // Array validation (converts to stream internally)
+ * const users = [...Array(10000)].map(createUser);
+ * const arrayResult = await streamValidator.validateArray(users, validator, options);
+ * console.log(`Processed ${arrayResult.summary.totalProcessed} users`);
+ * ```
+ *
+ * @see {@link IStreamValidator} Interface definition
+ * @see {@link StreamingValidationOptions} Configuration options
+ * @see {@link ValidraResult} Validation result structure
  */
 export class StreamValidator implements IStreamValidator {
   /**
-   * Creates a new StreamValidator instance.
-   * @param ruleCompiler The rule compiler to use for compiling rules.
-   * @param dataExtractor The data extractor for value extraction.
-   * @param memoryPoolManager The memory pool manager for object reuse.
+   * Creates a new StreamValidator instance with required dependencies.
+   *
+   * Initializes the streaming validator with necessary components for rule compilation,
+   * data extraction, and memory management. The validator is designed for high-throughput
+   * processing of large datasets with minimal memory footprint.
+   *
+   * @public
+   * @param {IRuleCompiler} ruleCompiler - The rule compiler for processing validation rules
+   * @param {IDataExtractor} dataExtractor - The data extractor for accessing nested values
+   * @param {IMemoryPoolManager} memoryPoolManager - The memory pool manager for object reuse
+   *
+   * @example
+   * ```typescript
+   * const ruleCompiler = new RuleCompiler();
+   * const dataExtractor = new DataExtractor();
+   * const memoryPoolManager = new MemoryPoolManager({ maxPoolSize: 1000 });
+   *
+   * const streamValidator = new StreamValidator(
+   *   ruleCompiler,
+   *   dataExtractor,
+   *   memoryPoolManager
+   * );
+   * ```
+   *
+   * @since 1.0.0
    */
   constructor(
     private readonly ruleCompiler: IRuleCompiler,
@@ -22,7 +108,65 @@ export class StreamValidator implements IStreamValidator {
   ) {}
 
   /**
-   * Validates a stream of data with generator pattern for memory efficiency
+   * Validates a stream of data using generator pattern for optimal memory efficiency.
+   *
+   * Processes data streams in configurable chunks, yielding validation results
+   * incrementally to minimize memory usage. Supports both synchronous and
+   * asynchronous data sources with comprehensive progress tracking and error handling.
+   *
+   * @public
+   * @template T - The type of data items being validated
+   * @param {Iterable<T> | AsyncIterable<T>} dataStream - The data stream to validate
+   * @param {Function} validator - Function to validate individual items
+   * @param {StreamingValidationOptions} [options={}] - Streaming configuration options
+   * @param {number} [options.chunkSize=100] - Number of items to process per chunk
+   * @param {Function} [options.onChunkComplete] - Callback for chunk completion events
+   * @param {Function} [options.onComplete] - Callback for stream completion
+   * @returns {AsyncGenerator<ValidraResult<T>, any, unknown>} Generator yielding validation results
+   *
+   * @example
+   * ```typescript
+   * const streamValidator = new StreamValidator(ruleCompiler, dataExtractor, memoryPool);
+   *
+   * // Large dataset validation
+   * const bigDataset = generateLargeDataset(); // AsyncIterable<User>
+   * const userValidator = (user: User) => validateUserRules(user);
+   *
+   * const options = {
+   *   chunkSize: 250,
+   *   onChunkComplete: ({ processed, errors, chunkSize }) => {
+   *     console.log(`Chunk completed: ${chunkSize} items, ${processed} total, ${errors} errors`);
+   *   },
+   *   onComplete: ({ totalProcessed, totalErrors, successRate }) => {
+   *     console.log(`Stream complete: ${totalProcessed} processed, ${successRate}% success rate`);
+   *   }
+   * };
+   *
+   * // Process stream with progress tracking
+   * for await (const result of streamValidator.validateStream(bigDataset, userValidator, options)) {
+   *   if (result.isValid) {
+   *     await processValidUser(result.data);
+   *   } else {
+   *     await handleValidationErrors(result.errors);
+   *   }
+   * }
+   *
+   * // File processing example
+   * async function processCSVFile(filePath: string) {
+   *   const csvStream = createCSVStream(filePath);
+   *   const validator = (row: CSVRow) => validateCSVRow(row);
+   *
+   *   let validCount = 0;
+   *   for await (const result of streamValidator.validateStream(csvStream, validator)) {
+   *     if (result.isValid) validCount++;
+   *   }
+   *
+   *   return validCount;
+   * }
+   * ```
+   *
+   * @since 1.0.0
+   * @see {@link StreamingValidationOptions} Configuration options
    */
   async *validateStream<T extends Record<string, any>>(
     dataStream: Iterable<T> | AsyncIterable<T>,

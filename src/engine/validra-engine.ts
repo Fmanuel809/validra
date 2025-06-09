@@ -30,18 +30,69 @@ import { StreamValidator } from './components/stream-validator';
 import { SyncValidator } from './components/sync-validator';
 
 /**
- * Main validation engine for Validra.
+ * Main validation engine for Validra business rules processing.
  *
- * Uses dependency injection and SOLID principles to compose validators,
- * memory managers, cache, callbacks, and error handling.
+ * A comprehensive, high-performance validation engine that supports multiple validation
+ * modes (synchronous, asynchronous, and streaming) with advanced features like memory
+ * pooling, caching, error handling, and custom callbacks.
  *
- * @remarks
- * Supports synchronous, asynchronous, and streaming validation, as well as metrics and resource cleanup.
+ * Uses dependency injection and SOLID principles to compose validators, memory managers,
+ * cache systems, callbacks, and error handling components.
  *
- * @example
+ * ## Features
+ * - **Multiple Validation Modes**: Sync, async, and streaming validation
+ * - **Memory Pool Management**: Optimized object reuse for high-frequency validations
+ * - **Advanced Caching**: Path and helper function caching for improved performance
+ * - **Error Handling**: Comprehensive error handling with recovery strategies
+ * - **Custom Callbacks**: Extensible callback system for validation events
+ * - **Metrics & Monitoring**: Built-in performance metrics and resource monitoring
+ *
+ * @example Basic Usage
+ * ```typescript
+ * // Simple validation
+ * const rules = [
+ *   { op: 'isEmail', field: 'email' },
+ *   { op: 'gte', field: 'age', params: { value: 18 } }
+ * ];
  * const engine = new ValidraEngine(rules);
- * const result = engine.validate({ foo: 'bar' });
+ * const result = engine.validate({ email: 'user@example.com', age: 25 });
+ * console.log(result.isValid); // true
+ * ```
  *
+ * @example Advanced Configuration
+ * ```typescript
+ * // Advanced options with callbacks
+ * const options = {
+ *   debug: true,
+ *   enableMemoryPool: true,
+ *   memoryPoolSize: 100,
+ *   allowPartialValidation: true
+ * };
+ * const callbacks = [{
+ *   name: 'validation-logger',
+ *   onStart: (data) => console.log('Validation started'),
+ *   onComplete: (result) => console.log('Validation completed', result)
+ * }];
+ * const engine = new ValidraEngine(rules, callbacks, options);
+ * ```
+ *
+ * @example Async Validation
+ * ```typescript
+ * // Asynchronous validation
+ * const result = await engine.validateAsync(data);
+ * if (result.isValid) {
+ *   console.log('Data is valid');
+ * } else {
+ *   console.log('Validation errors:', result.errors);
+ * }
+ * ```
+ *
+ * @see {@link ValidraEngineOptions} for configuration options
+ * @see {@link ValidraCallback} for callback system details
+ * @see {@link ValidraResult} for result structure
+ *
+ * @public
+ * @since 1.0.0
  * @category Engine
  */
 export class ValidraEngine {
@@ -61,12 +112,52 @@ export class ValidraEngine {
   private readonly cacheManager: ICacheManager;
 
   /**
-   * Creates a new instance of the validation engine.
+   * Creates a new instance of the Validra validation engine.
    *
-   * @param rules - Validation rules to apply.
-   * @param callbacks - Custom callbacks for validation events.
-   * @param options - Engine configuration options.
-   * @param dependencies - Injectable dependencies for testing or advanced customization.
+   * Initializes all internal components using dependency injection pattern,
+   * allowing for custom implementations and easy testing. Components include
+   * validators, memory pool manager, cache manager, error handler, and callback manager.
+   *
+   * @param rules - Array of validation rules to apply to data objects
+   * @param callbacks - Optional array of custom callbacks for validation events
+   * @param options - Optional engine configuration options with sensible defaults
+   * @param dependencies - Optional injectable dependencies for testing or advanced customization
+   *
+   * @example Basic Constructor
+   * ```typescript
+   * const rules = [
+   *   { op: 'required', field: 'name' },
+   *   { op: 'isEmail', field: 'email' }
+   * ];
+   * const engine = new ValidraEngine(rules);
+   * ```
+   *
+   * @example With Options and Callbacks
+   * ```typescript
+   * const options = {
+   *   debug: true,
+   *   enableMemoryPool: true,
+   *   memoryPoolSize: 50
+   * };
+   * const callbacks = [{
+   *   name: 'logger',
+   *   onComplete: (result) => console.log(result)
+   * }];
+   * const engine = new ValidraEngine(rules, callbacks, options);
+   * ```
+   *
+   * @example With Custom Dependencies (for testing)
+   * ```typescript
+   * const mockDataExtractor = new MockDataExtractor();
+   * const engine = new ValidraEngine(rules, [], {}, {
+   *   dataExtractor: mockDataExtractor
+   * });
+   * ```
+   *
+   * @throws {Error} When rules array is empty or contains invalid rule definitions
+   *
+   * @public
+   * @since 1.0.0
    */
   constructor(
     rules: Rule[],
@@ -150,14 +241,63 @@ export class ValidraEngine {
   }
 
   /**
-   * Synchronously validates data.
+   * Performs synchronous validation of data against configured rules.
    *
-   * @typeParam T - Type of the data to validate.
-   * @param data - Data object to validate.
-   * @param callback - Callback to execute after validation completes.
-   * @param options - Validation options (failFast, maxErrors).
-   * @returns Validation result.
-   * @throws Error if the data is invalid or a validation error occurs.
+   * This is the primary validation method for most use cases. It validates
+   * the provided data object against all configured rules and returns a
+   * comprehensive result object containing validation status, processed data,
+   * and any validation errors.
+   *
+   * @template T - The type of the data object being validated
+   * @param data - The data object to validate against the configured rules
+   * @param callback - Optional callback function or callback name to execute after validation
+   * @param options - Optional validation configuration options
+   * @param options.failFast - If true, stops validation on first error (default: false)
+   * @param options.maxErrors - Maximum number of errors to collect before stopping (default: Infinity)
+   *
+   * @returns A complete validation result object containing:
+   *   - `isValid`: Boolean indicating if all validations passed
+   *   - `data`: The original data object (potentially transformed)
+   *   - `errors`: Object containing field-specific validation errors (if any)
+   *   - `metadata`: Additional information about the validation process
+   *
+   * @throws {Error} When input data is invalid, null, or undefined
+   * @throws {Error} When a critical validation error occurs that cannot be recovered
+   *
+   * @example Basic Validation
+   * ```typescript
+   * const data = { email: 'user@example.com', age: 25 };
+   * const result = engine.validate(data);
+   *
+   * if (result.isValid) {
+   *   console.log('Validation passed!');
+   * } else {
+   *   console.log('Validation errors:', result.errors);
+   * }
+   * ```
+   *
+   * @example With Options
+   * ```typescript
+   * // Stop on first error
+   * const result = engine.validate(data, undefined, { failFast: true });
+   *
+   * // Limit error collection
+   * const result = engine.validate(data, undefined, { maxErrors: 5 });
+   * ```
+   *
+   * @example With Callback
+   * ```typescript
+   * const result = engine.validate(data, (result) => {
+   *   console.log('Validation completed:', result.isValid);
+   * });
+   * ```
+   *
+   * @see {@link ValidraResult} for detailed result structure
+   * @see {@link validateAsync} for asynchronous validation
+   * @see {@link validateStream} for streaming validation
+   *
+   * @public
+   * @since 1.0.0
    */
   public validate<T extends Record<string, any>>(
     data: T,
@@ -202,13 +342,62 @@ export class ValidraEngine {
   }
 
   /**
-   * Asynchronously validates data.
+   * Performs asynchronous validation of data against configured rules.
    *
-   * @typeParam T - Type of the data to validate.
-   * @param data - Data object to validate.
-   * @param callback - Callback to execute after validation completes.
-   * @returns Promise with the validation result.
-   * @throws Error if the data is invalid or a validation error occurs.
+   * This method provides asynchronous validation support for scenarios where
+   * validation operations may involve async operations like database lookups,
+   * API calls, or file system operations. It supports the same rule set as
+   * synchronous validation but processes them asynchronously.
+   *
+   * @template T - The type of the data object being validated
+   * @param data - The data object to validate against the configured rules
+   * @param callback - Optional callback function or callback name to execute after validation
+   *
+   * @returns A Promise that resolves to a complete validation result object containing:
+   *   - `isValid`: Boolean indicating if all validations passed
+   *   - `data`: The original data object (potentially transformed)
+   *   - `errors`: Object containing field-specific validation errors (if any)
+   *   - `metadata`: Additional information about the validation process
+   *
+   * @throws {Error} When input data is invalid, null, or undefined
+   * @throws {Error} When a critical validation error occurs that cannot be recovered
+   *
+   * @example Basic Async Validation
+   * ```typescript
+   * const data = { email: 'user@example.com', age: 25 };
+   * const result = await engine.validateAsync(data);
+   *
+   * if (result.isValid) {
+   *   console.log('Async validation passed!');
+   * } else {
+   *   console.log('Validation errors:', result.errors);
+   * }
+   * ```
+   *
+   * @example With Async Callback
+   * ```typescript
+   * const result = await engine.validateAsync(data, async (result) => {
+   *   await logValidationResult(result);
+   *   await sendNotification(result);
+   * });
+   * ```
+   *
+   * @example Error Handling
+   * ```typescript
+   * try {
+   *   const result = await engine.validateAsync(data);
+   *   // Handle result
+   * } catch (error) {
+   *   console.error('Validation failed:', error.message);
+   * }
+   * ```
+   *
+   * @see {@link validate} for synchronous validation
+   * @see {@link validateStream} for streaming validation
+   * @see {@link ValidraResult} for detailed result structure
+   *
+   * @public
+   * @since 1.0.0
    */
   public async validateAsync<T extends Record<string, any>>(
     data: T,
@@ -250,14 +439,80 @@ export class ValidraEngine {
   }
 
   /**
-   * Asynchronously validates a data stream, useful for large volumes.
+   * Performs streaming validation for large datasets or real-time data processing.
    *
-   * @typeParam TData - Type of the data to validate in the stream.
-   * @param dataStream - Iterable or AsyncIterable of data objects to validate.
-   * @param options - Streaming validation options.
-   * @yields Partial validation results for each chunk.
-   * @returns A final summary of the validation after the stream ends.
-   * @throws Error if an error occurs during validation.
+   * This method provides efficient validation of large datasets by processing them
+   * in configurable chunks, yielding intermediate results and providing a final
+   * summary. Ideal for scenarios involving big data, real-time streams, or memory-
+   * constrained environments.
+   *
+   * The method uses an async generator pattern, allowing for efficient memory usage
+   * and progressive result processing without loading entire datasets into memory.
+   *
+   * @template TData - The type of individual data objects in the stream
+   * @param dataStream - An iterable or async iterable containing data objects to validate
+   * @param options - Optional streaming configuration options
+   * @param options.chunkSize - Number of items to process per chunk (default: 100)
+   * @param options.concurrency - Number of concurrent validations (default: 1)
+   * @param options.onProgress - Progress callback for monitoring stream processing
+   *
+   * @yields {StreamingValidationResult<TData>} Intermediate validation results for each processed chunk
+   * @returns {Promise<StreamingValidationSummary>} Final summary containing overall statistics
+   *
+   * @throws {Error} When the data stream is invalid or cannot be processed
+   * @throws {Error} When a critical validation error occurs during stream processing
+   *
+   * @example Basic Streaming Validation
+   * ```typescript
+   * const dataStream = [
+   *   { email: 'user1@example.com', age: 25 },
+   *   { email: 'user2@example.com', age: 30 },
+   *   // ... thousands more items
+   * ];
+   *
+   * for await (const result of engine.validateStream(dataStream)) {
+   *   console.log(`Processed chunk: ${result.processedCount} items`);
+   *   console.log(`Valid items: ${result.validCount}`);
+   *   console.log(`Invalid items: ${result.invalidCount}`);
+   * }
+   * ```
+   *
+   * @example With Progress Monitoring
+   * ```typescript
+   * const options = {
+   *   chunkSize: 50,
+   *   onProgress: (processed, total) => {
+   *     console.log(`Progress: ${processed}/${total} (${(processed/total*100).toFixed(1)}%)`);
+   *   }
+   * };
+   *
+   * const generator = engine.validateStream(dataStream, options);
+   * const summary = await generator.return(); // Get final summary
+   * console.log(`Total processed: ${summary.totalProcessed}`);
+   * console.log(`Overall success rate: ${summary.successRate}%`);
+   * ```
+   *
+   * @example Error Handling in Streams
+   * ```typescript
+   * try {
+   *   for await (const result of engine.validateStream(dataStream)) {
+   *     if (result.hasErrors) {
+   *       console.warn('Errors in current chunk:', result.errors);
+   *     }
+   *   }
+   * } catch (error) {
+   *   console.error('Stream validation failed:', error.message);
+   * }
+   * ```
+   *
+   * @see {@link validate} for synchronous validation
+   * @see {@link validateAsync} for asynchronous validation
+   * @see {@link StreamingValidationOptions} for detailed options
+   * @see {@link StreamingValidationResult} for chunk result structure
+   * @see {@link StreamingValidationSummary} for final summary structure
+   *
+   * @public
+   * @since 1.0.0
    */
   public async *validateStream<TData extends Record<string, any>>(
     dataStream: Iterable<TData> | AsyncIterable<TData>,
@@ -285,9 +540,69 @@ export class ValidraEngine {
   }
 
   /**
-   * Returns usage and performance metrics from internal engine components.
+   * Retrieves comprehensive performance and usage metrics from all engine components.
    *
-   * @returns An object with metrics for compiler, extractor, memory, cache, errors, and callbacks.
+   * This method provides detailed insights into the engine's performance characteristics,
+   * resource utilization, and operational statistics. Useful for monitoring, debugging,
+   * performance optimization, and capacity planning.
+   *
+   * The metrics include information from all major engine components including rule
+   * compilation, data extraction, memory pool usage, caching effectiveness, error
+   * handling statistics, and callback execution metrics.
+   *
+   * @returns A comprehensive metrics object containing:
+   *   - `ruleCompiler`: Rule compilation and caching statistics
+   *   - `dataExtractor`: Data extraction and path resolution metrics
+   *   - `memoryPool`: Memory pool utilization and performance data
+   *   - `cache`: Cache hit rates and memory usage for all cache types
+   *   - `errorHandler`: Error occurrence, recovery, and handling statistics
+   *   - `callbackManager`: Callback registration and execution metrics
+   *
+   * @example Basic Metrics Retrieval
+   * ```typescript
+   * const metrics = engine.getMetrics();
+   * console.log('Cache hit rate:', metrics.cache.pathCache.hitRate);
+   * console.log('Memory pool efficiency:', metrics.memoryPool.hitRate);
+   * console.log('Total validations:', metrics.ruleCompiler.totalCompilations);
+   * ```
+   *
+   * @example Performance Monitoring
+   * ```typescript
+   * // Monitor performance over time
+   * setInterval(() => {
+   *   const metrics = engine.getMetrics();
+   *
+   *   if (metrics.cache.pathCache.hitRate < 0.8) {
+   *     console.warn('Low cache hit rate detected');
+   *   }
+   *
+   *   if (metrics.memoryPool.hitRate < 0.9) {
+   *     console.warn('Memory pool may need tuning');
+   *   }
+   *
+   *   if (metrics.errorHandler.fatalErrors > 0) {
+   *     console.error('Fatal errors detected!');
+   *   }
+   * }, 10000);
+   * ```
+   *
+   * @example Resource Usage Analysis
+   * ```typescript
+   * const metrics = engine.getMetrics();
+   * const totalMemoryUsage = metrics.cache.totalMemoryUsage +
+   *                         (metrics.memoryPool.poolSizes.validationResult * 1000);
+   *
+   * console.log(`Total estimated memory usage: ${totalMemoryUsage} bytes`);
+   * console.log(`Active callbacks: ${metrics.callbackManager.activeCallbacks}`);
+   * ```
+   *
+   * @see {@link clearCaches} for resource cleanup
+   * @see {@link CacheMetrics} for cache-specific metrics
+   * @see {@link MemoryPoolMetrics} for memory pool metrics
+   * @see {@link ErrorStatistics} for error handling metrics
+   *
+   * @public
+   * @since 1.0.0
    */
   public getMetrics() {
     return {

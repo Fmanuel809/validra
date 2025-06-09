@@ -1,10 +1,62 @@
+/**
+ * @fileoverview Cache management component for the Validra validation engine
+ * @module CacheManager
+ * @version 1.0.0
+ * @author Validra Team
+ * @since 1.0.0
+ */
+
 import { helpersActions } from '@/dsl';
 import { ValidraLogger } from '@/utils';
 import { CacheConfig, CacheMetrics, CacheType, ICacheManager } from '../interfaces/cache-manager.interface';
 
 /**
- * Cache Manager Implementation
- * Provides optimized caching strategies for validation components
+ * Cache Manager implementation for optimizing validation performance.
+ *
+ * Provides advanced caching strategies for validation components including path resolution
+ * caching and helper function caching. Supports multiple cache eviction policies (LRU, FIFO)
+ * and configurable cache sizes to balance memory usage with performance.
+ *
+ * Key features:
+ * - Path segment caching for object property access optimization
+ * - Helper function result caching for frequently used validation operations
+ * - LRU (Least Recently Used) and FIFO (First In, First Out) eviction policies
+ * - Comprehensive metrics tracking for cache performance analysis
+ * - Configurable cache sizes and strategies per cache type
+ *
+ * @public
+ * @since 1.0.0
+ *
+ * @example
+ * ```typescript
+ * // Basic cache manager
+ * const cacheManager = new CacheManager();
+ *
+ * // Advanced configuration
+ * const advancedCache = new CacheManager({
+ *   maxPathCacheSize: 100,
+ *   maxHelperCacheSize: 200,
+ *   enablePathCache: true,
+ *   enableHelperCache: true,
+ *   pathCacheStrategy: 'LRU'
+ * });
+ *
+ * // Path caching usage
+ * const segments = cacheManager.getPathSegments('user.profile.name');
+ * console.log(segments); // ['user', 'profile', 'name']
+ *
+ * // Cache metrics
+ * const metrics = cacheManager.getMetrics();
+ * console.log(`Cache hit rate: ${metrics.pathHitRate}%`);
+ *
+ * // Cache management
+ * cacheManager.clearCache('path');
+ * cacheManager.invalidateCache();
+ * ```
+ *
+ * @see {@link ICacheManager} Interface definition
+ * @see {@link CacheConfig} Configuration options
+ * @see {@link CacheMetrics} Performance metrics
  */
 export class CacheManager implements ICacheManager {
   private readonly pathCache = new Map<string, string[]>();
@@ -18,8 +70,41 @@ export class CacheManager implements ICacheManager {
   private pathMisses = 0;
 
   /**
-   * Creates a new CacheManager instance.
-   * @param config Optional cache configuration.
+   * Creates a new CacheManager instance with configurable caching strategies.
+   *
+   * Initializes cache storage containers and applies configuration settings
+   * for optimal performance based on the intended use case. Default settings
+   * provide balanced performance for most validation scenarios.
+   *
+   * @public
+   * @param {CacheConfig} [config={}] - Cache configuration options
+   * @param {number} [config.maxPathCacheSize=50] - Maximum number of path entries to cache
+   * @param {number} [config.maxHelperCacheSize=100] - Maximum number of helper results to cache
+   * @param {boolean} [config.enablePathCache=true] - Enable path segment caching
+   * @param {boolean} [config.enableHelperCache=true] - Enable helper function result caching
+   * @param {'LRU' | 'FIFO'} [config.pathCacheStrategy='LRU'] - Cache eviction strategy for path cache
+   *
+   * @example
+   * ```typescript
+   * // Default configuration
+   * const defaultCache = new CacheManager();
+   *
+   * // Custom configuration for high-performance scenarios
+   * const highPerfCache = new CacheManager({
+   *   maxPathCacheSize: 200,
+   *   maxHelperCacheSize: 500,
+   *   pathCacheStrategy: 'LRU'
+   * });
+   *
+   * // Memory-constrained configuration
+   * const lightweightCache = new CacheManager({
+   *   maxPathCacheSize: 20,
+   *   maxHelperCacheSize: 50,
+   *   enableHelperCache: false  // Disable helper cache to save memory
+   * });
+   * ```
+   *
+   * @since 1.0.0
    */
   constructor(config: CacheConfig = {}) {
     this.config = {
@@ -34,7 +119,34 @@ export class CacheManager implements ICacheManager {
   }
 
   /**
-   * Get path segments with LRU cache optimization
+   * Retrieves path segments with optimized LRU cache support.
+   *
+   * Splits object property paths into segments while leveraging caching
+   * to avoid repeated string operations. Implements LRU strategy to maintain
+   * frequently accessed paths in memory for optimal performance.
+   *
+   * @public
+   * @param {string} path - The object path to split (e.g., 'user.profile.name')
+   * @returns {string[]} Array of path segments
+   *
+   * @example
+   * ```typescript
+   * const cacheManager = new CacheManager();
+   *
+   * // First call - cache miss, segments computed
+   * const segments1 = cacheManager.getPathSegments('user.profile.name');
+   * console.log(segments1); // ['user', 'profile', 'name']
+   *
+   * // Second call - cache hit, segments retrieved from cache
+   * const segments2 = cacheManager.getPathSegments('user.profile.name');
+   * console.log(segments2); // ['user', 'profile', 'name'] (from cache)
+   *
+   * // Complex nested paths
+   * const nestedPath = cacheManager.getPathSegments('data[0].items.metadata.id');
+   * console.log(nestedPath); // ['data', '0', 'items', 'metadata', 'id']
+   * ```
+   *
+   * @since 1.0.0
    */
   getPathSegments(path: string): string[] {
     if (!this.config.enablePathCache) {

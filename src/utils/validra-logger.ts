@@ -1,35 +1,146 @@
 /**
- * A comprehensive logging utility for the Validra library.
+ * @fileoverview Comprehensive logging utility for structured diagnostic output and debugging support
+ * @module ValidraLogger
+ * @version 1.0.0
+ * @author Validra Team
+ * @since 1.0.0
+ */
+
+/**
+ * Comprehensive logging utility for the Validra validation library with structured output and diagnostic support.
  *
- * Provides structured logging with timestamps and source identification.
- * Supports all standard console logging levels with consistent formatting.
+ * The ValidraLogger provides a sophisticated logging framework that enhances debugging
+ * and monitoring capabilities throughout the Validra ecosystem. Designed with consistent
+ * formatting, timestamp precision, and source identification for comprehensive logging
+ * across all validation operations and components.
+ *
+ * Key features:
+ * - **Structured Logging**: Consistent timestamp and source formatting across all log levels
+ * - **Multi-Level Support**: Complete logging level coverage (log, info, warn, error, debug, trace)
+ * - **Source Identification**: Configurable source names for component-specific logging
+ * - **Parameter Support**: Flexible parameter passing for complex object logging
+ * - **Error Integration**: Automatic error throwing with formatted error messages
+ * - **Performance Optimized**: Minimal overhead logging operations for production use
+ *
+ * Logging format:
+ * `[ISO_TIMESTAMP] [SOURCE_NAME] MESSAGE [OPTIONAL_PARAMETERS]`
+ *
+ * Use cases:
+ * - **Development Debugging**: Detailed tracing of validation operations and data flow
+ * - **Production Monitoring**: Structured logging for error tracking and performance analysis
+ * - **Component Isolation**: Source-specific logging for modular debugging
+ * - **Error Reporting**: Consistent error formatting and automatic exception handling
+ * - **Performance Analysis**: Timestamped logging for operation timing and optimization
+ *
+ * @public
+ * @since 1.0.0
  *
  * @example
  * ```typescript
- * // Using with default source
+ * // Basic logger with default source
  * const logger = new ValidraLogger();
- * logger.log("Processing validation");
+ * logger.log("Validation process started");
+ * logger.info("Processing user data");
+ * logger.warn("Deprecated validation method used");
+ * ```
  *
- * // Using with custom source
- * const customLogger = new ValidraLogger("ValidationEngine");
- * customLogger.info("Starting validation process");
- * customLogger.warn("Deprecated method used");
+ * @example
+ * ```typescript
+ * // Component-specific logger with custom source
+ * const engineLogger = new ValidraLogger("ValidationEngine");
+ * const cacheLogger = new ValidraLogger("CacheManager");
+ *
+ * engineLogger.debug("Rule compilation started", { ruleCount: 15 });
+ * cacheLogger.info("Cache hit", { key: "user_validation", hitRate: "85%" });
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Comprehensive logging with error handling
+ * const logger = new ValidraLogger("DataProcessor");
+ *
+ * try {
+ *   logger.trace("Entering critical validation section");
+ *   logger.debug("Processing complex nested data", { depth: 5, size: "2.3MB" });
+ *   logger.info("Validation completed successfully", {
+ *     processed: 1250,
+ *     errors: 0,
+ *     duration: "245ms"
+ *   });
+ * } catch (error) {
+ *   logger.error("Critical validation failure", {
+ *     error: error.message,
+ *     stack: error.stack
+ *   });
+ * }
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Performance monitoring and structured logging
+ * const perfLogger = new ValidraLogger("PerformanceMonitor");
+ *
+ * const startTime = performance.now();
+ * // ... validation operations ...
+ * const endTime = performance.now();
+ *
+ * perfLogger.info("Validation performance metrics", {
+ *   operation: "bulk_validation",
+ *   recordCount: 10000,
+ *   duration: `${(endTime - startTime).toFixed(2)}ms`,
+ *   throughput: `${(10000 / ((endTime - startTime) / 1000)).toFixed(0)} records/sec`
+ * });
  * ```
  */
 export class ValidraLogger {
-  /** The source identifier for log messages */
+  /**
+   * The source identifier used in all log messages for component identification and filtering.
+   *
+   * @protected
+   * @default 'Validra Engine'
+   * @since 1.0.0
+   */
   protected source = 'Validra Engine';
 
   /**
-   * Creates a new ValidraLogger instance.
+   * Creates a new ValidraLogger instance with configurable source identification for structured logging.
    *
-   * @param source - Optional custom source name for log messages.
-   *                If not provided, defaults to 'Validra Engine'
+   * Initializes the logger with a custom source name that will be included in all log
+   * messages for easy identification and filtering. The source name helps distinguish
+   * between different components, modules, or services within the Validra ecosystem.
+   *
+   * @public
+   * @param {string} source - Custom source identifier for log message attribution and filtering
    *
    * @example
    * ```typescript
-   * const logger = new ValidraLogger("MyModule");
+   * // Create logger with custom source for component identification
+   * const engineLogger = new ValidraLogger("ValidationEngine");
+   * const cacheLogger = new ValidraLogger("CacheManager");
+   * const streamLogger = new ValidraLogger("StreamValidator");
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Module-specific logging for debugging and monitoring
+   * const ruleCompilerLogger = new ValidraLogger("RuleCompiler");
+   * ruleCompilerLogger.debug("Starting rule compilation", { ruleCount: 25 });
+   * ruleCompilerLogger.info("Compilation completed", { duration: "45ms" });
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Environment-specific logger configuration
+   * const environment = process.env.NODE_ENV || 'development';
+   * const logger = new ValidraLogger(`Validra-${environment}`);
+   *
+   * logger.info("Logger initialized", {
+   *   environment,
+   *   timestamp: new Date().toISOString()
+   * });
+   * ```
+   *
+   * @since 1.0.0
    */
   constructor(source: string) {
     if (source) {

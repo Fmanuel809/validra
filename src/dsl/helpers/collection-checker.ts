@@ -1,45 +1,65 @@
-// Provides comprehensive collection validation and manipulation utilities for Validra.
-// Author: Felix M. Martinez
-//
-// This module exports the CollectionChecker class with static methods for collection operations.
-//
-// All methods are static and can be called without instantiating the class.
-//
-// Example usage:
-//   CollectionChecker.isEmpty([]);
-//   CollectionChecker.hasProperty({ name: 'John' }, 'name');
-//
-// Version: 1.0.0
+/**
+ * @fileoverview Comprehensive collection validation and manipulation utilities for the Validra library
+ * @module CollectionChecker
+ * @version 1.0.0
+ * @author Felix M. Martinez
+ * @since 1.0.0
+ */
 
 import { TypeChecker } from './type-checker';
 
 /**
  * Utility class providing static methods for collection validation and property checking operations.
+ *
  * Supports both arrays and objects as collections, providing consistent interfaces for
- * common collection operations.
+ * common collection operations. Essential for validating data structures in dynamic
+ * validation scenarios where collection properties need verification.
  *
  * @public
  * @since 1.0.0
  *
  * @example
  * ```typescript
- * // Array operations
+ * // Array operations - size and content validation
  * CollectionChecker.isEmpty([]); // true
+ * CollectionChecker.isEmpty([1, 2, 3]); // false
  * CollectionChecker.contains([1, 2, 3], 2); // true
  *
- * // Object operations
+ * // Object operations - property and value validation
  * CollectionChecker.isEmpty({}); // true
- * CollectionChecker.hasProperty({ name: 'John' }, 'name'); // true
- * CollectionChecker.contains({ a: 1, b: 2 }, 2); // true
+ * CollectionChecker.isEmpty({ name: 'John' }); // false
+ * CollectionChecker.hasProperty({ name: 'John', age: 30 }, 'name'); // true
+ * CollectionChecker.hasProperty({ name: 'John', age: 30 }, ['name', 'age']); // true
+ * CollectionChecker.contains({ a: 1, b: 2 }, 2); // true (searches values)
+ *
+ * // Real-world usage in API validation
+ * function validateUserProfile(profile: unknown): boolean {
+ *   if (!TypeChecker.isObject(profile)) return false;
+ *
+ *   const required = ['name', 'email'];
+ *   return CollectionChecker.hasProperty(profile as Record<string, any>, required);
+ * }
+ *
+ * // Usage in data processing
+ * function processItems(items: unknown[]): boolean {
+ *   return !CollectionChecker.isEmpty(items) &&
+ *          CollectionChecker.contains(items, 'targetValue');
+ * }
  * ```
+ *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array | MDN Array Documentation}
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object | MDN Object Documentation}
  */
 export class CollectionChecker {
   /**
    * Checks if a collection (array or object) is empty.
-   * For arrays, checks if length is 0. For objects, checks if there are no enumerable properties
-   * and no symbol properties.
+   *
+   * For arrays, checks if length is 0. For objects, checks if there are no enumerable
+   * properties and no symbol properties. This method provides comprehensive emptiness
+   * validation for both data structure types commonly used in JavaScript applications.
    *
    * @public
+   * @static
    * @param {any[] | Record<string, any>} collection - The collection to check for emptiness
    * @returns {boolean} True if the collection is empty, false otherwise
    * @throws {string} Throws if the input is neither an array nor an object
@@ -49,21 +69,36 @@ export class CollectionChecker {
    * // Array examples
    * CollectionChecker.isEmpty([]); // true
    * CollectionChecker.isEmpty([1, 2, 3]); // false
+   * CollectionChecker.isEmpty(new Array()); // true
    *
    * // Object examples
    * CollectionChecker.isEmpty({}); // true
    * CollectionChecker.isEmpty({ name: 'John' }); // false
+   * CollectionChecker.isEmpty(Object.create(null)); // true
    *
    * // Symbol properties are also considered
    * const sym = Symbol('test');
-   * CollectionChecker.isEmpty({ [sym]: 'value' }); // false
+   * const objWithSymbol = {};
+   * objWithSymbol[sym] = 'value';
+   * CollectionChecker.isEmpty(objWithSymbol); // false
    *
-   * // Error cases
+   * // Error cases - invalid input types
    * CollectionChecker.isEmpty('string'); // throws: 'Input must be an array or an object.'
    * CollectionChecker.isEmpty(42); // throws: 'Input must be an array or an object.'
+   * CollectionChecker.isEmpty(null); // throws: 'Input must be an array or an object.'
+   *
+   * // Real-world usage
+   * function validateFormData(data: unknown): boolean {
+   *   if (TypeChecker.isObject(data) && !CollectionChecker.isEmpty(data as Record<string, any>)) {
+   *     return true; // Has form fields
+   *   }
+   *   return false;
+   * }
    * ```
    *
    * @since 1.0.0
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys | Object.keys Documentation}
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols | Object.getOwnPropertySymbols Documentation}
    */
   static isEmpty(collection: any[] | Record<string, any>): boolean {
     if (Array.isArray(collection)) {

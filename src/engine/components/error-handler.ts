@@ -1,3 +1,11 @@
+/**
+ * @fileoverview Comprehensive error handling and recovery system for the Validra validation engine
+ * @module ErrorHandler
+ * @version 1.0.0
+ * @author Validra Team
+ * @since 1.0.0
+ */
+
 import { ValidraLogger } from '../../utils/validra-logger';
 import type {
   ErrorCategory,
@@ -12,8 +20,67 @@ import type { ValidraResult } from '../interfaces/validra-result';
 import type { Rule } from '../rule';
 
 /**
- * ErrorHandler manages validation errors with categorization and recovery
- * Implements Single Responsibility Principle for error management
+ * Advanced error handler for validation operations with categorization and recovery strategies.
+ *
+ * Manages validation errors with sophisticated categorization, recovery mechanisms,
+ * and comprehensive error tracking. Implements configurable error handling policies
+ * including fail-fast behavior, error limits, and automatic recovery strategies.
+ *
+ * Key features:
+ * - Error categorization (validation, system, configuration, etc.)
+ * - Configurable severity levels (low, medium, high, critical)
+ * - Recovery strategies for different error types
+ * - Error statistics and metrics tracking
+ * - Stack trace collection for debugging
+ * - Fail-fast or accumulate error modes
+ * - Error transformation and formatting
+ *
+ * @public
+ * @since 1.0.0
+ *
+ * @example
+ * ```typescript
+ * // Basic error handler
+ * const errorHandler = new ErrorHandler();
+ *
+ * // Advanced configuration
+ * const advancedHandler = new ErrorHandler(
+ *   new ValidraLogger('validation'),
+ *   {
+ *     maxErrors: 50,
+ *     failFast: false,
+ *     collectStackTraces: true,
+ *     enableRecovery: true,
+ *     logErrors: true
+ *   }
+ * );
+ *
+ * // Handle validation error
+ * const error = errorHandler.handleError(
+ *   'Invalid email format',
+ *   {
+ *     field: 'email',
+ *     rule: emailRule,
+ *     value: 'invalid-email'
+ *   }
+ * );
+ *
+ * // Error recovery strategies
+ * errorHandler.setRecoveryStrategy('validation', {
+ *   strategy: 'skip',
+ *   retryCount: 0,
+ *   fallbackValue: null
+ * });
+ *
+ * // Get error statistics
+ * const stats = errorHandler.getStatistics();
+ * console.log(`Total errors: ${stats.totalErrors}`);
+ * console.log(`Critical errors: ${stats.severityBreakdown.critical}`);
+ * ```
+ *
+ * @see {@link IErrorHandler} Interface definition
+ * @see {@link ValidationError} Error structure
+ * @see {@link ErrorHandlingOptions} Configuration options
  */
 export class ErrorHandler implements IErrorHandler {
   private readonly errors: ValidationError[] = [];
@@ -30,9 +97,59 @@ export class ErrorHandler implements IErrorHandler {
   };
 
   /**
-   * Creates a new ErrorHandler instance.
-   * @param logger Optional logger for error events.
-   * @param options Optional error handling configuration.
+   * Creates a new ErrorHandler instance with configurable error management policies.
+   *
+   * Initializes the error handler with optional logger and configuration settings
+   * for managing validation errors according to specific application requirements.
+   * Supports various error handling strategies from fail-fast to error accumulation.
+   *
+   * @public
+   * @param {ValidraLogger} [logger] - Optional logger instance for error events
+   * @param {ErrorHandlingOptions} [options] - Optional error handling configuration
+   * @param {number} [options.maxErrors=100] - Maximum number of errors to collect
+   * @param {boolean} [options.failFast=false] - Stop validation on first error
+   * @param {boolean} [options.collectStackTraces=true] - Include stack traces in errors
+   * @param {boolean} [options.enableRecovery=false] - Enable automatic error recovery
+   * @param {boolean} [options.logErrors=true] - Log errors to the configured logger
+   * @param {boolean} [options.transformErrors=true] - Apply error transformations
+   *
+   * @example
+   * ```typescript
+   * // Basic error handler with default settings
+   * const basicHandler = new ErrorHandler();
+   *
+   * // Custom logger with default options
+   * const loggedHandler = new ErrorHandler(
+   *   new ValidraLogger('custom-validation')
+   * );
+   *
+   * // Full configuration for production environment
+   * const productionHandler = new ErrorHandler(
+   *   new ValidraLogger('production'),
+   *   {
+   *     maxErrors: 10,
+   *     failFast: true,
+   *     collectStackTraces: false,
+   *     enableRecovery: true,
+   *     logErrors: true,
+   *     transformErrors: true
+   *   }
+   * );
+   *
+   * // Development configuration with detailed error tracking
+   * const devHandler = new ErrorHandler(
+   *   new ValidraLogger('development'),
+   *   {
+   *     maxErrors: 1000,
+   *     failFast: false,
+   *     collectStackTraces: true,
+   *     enableRecovery: false,
+   *     logErrors: true
+   *   }
+   * );
+   * ```
+   *
+   * @since 1.0.0
    */
   constructor(logger?: ValidraLogger, options?: ErrorHandlingOptions) {
     this.logger = logger || new ValidraLogger('error');
@@ -42,7 +159,57 @@ export class ErrorHandler implements IErrorHandler {
   }
 
   /**
-   * Handles a validation error with context
+   * Handles a validation error with comprehensive context and categorization.
+   *
+   * Processes validation errors by creating structured error objects, applying
+   * categorization and severity classification, and executing appropriate
+   * recovery strategies. Supports both Error objects and string messages
+   * with rich contextual information.
+   *
+   * @public
+   * @param {Error | string} error - The error to handle (Error object or message string)
+   * @param {Object} [context={}] - Contextual information about the error
+   * @param {string} [context.field] - The field name where the error occurred
+   * @param {Rule} [context.rule] - The validation rule that failed
+   * @param {unknown} [context.value] - The value that caused the validation failure
+   * @param {Record<string, unknown>} [context.metadata] - Additional metadata about the error
+   * @returns {ValidationError} The structured validation error object
+   * @throws {Error} Throws if failFast is enabled and max errors exceeded
+   *
+   * @example
+   * ```typescript
+   * const errorHandler = new ErrorHandler();
+   *
+   * // Handle string error with context
+   * const error1 = errorHandler.handleError(
+   *   'Email format is invalid',
+   *   {
+   *     field: 'user.email',
+   *     rule: emailValidationRule,
+   *     value: 'invalid-email@',
+   *     metadata: { attempted: 'email-validation' }
+   *   }
+   * );
+   *
+   * // Handle Error object
+   * const error2 = errorHandler.handleError(
+   *   new TypeError('Expected string but got number'),
+   *   {
+   *     field: 'user.age',
+   *     value: 'twenty-five'
+   *   }
+   * );
+   *
+   * // Minimal error handling
+   * const error3 = errorHandler.handleError('Validation failed');
+   *
+   * console.log(error1.category); // 'validation'
+   * console.log(error1.severity); // 'medium'
+   * console.log(error1.timestamp); // Date object
+   * ```
+   *
+   * @since 1.0.0
+   * @see {@link ValidationError} Structure of returned error objects
    */
   handleError(
     error: Error | string,

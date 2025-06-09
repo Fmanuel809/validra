@@ -18,11 +18,7 @@ const config = {
   cleanOutputDir: true,
   customFooterHtml:
     '<p class="tsd-generator">By <a href="https://github.com/Fmanuel809/validra" target="_blank">Validra</a> | MIT License</p>',
-  plugin: [
-    'typedoc-plugin-dt-links',
-    'typedoc-plugin-coverage',
-    'typedoc-github-theme',
-  ],
+  plugin: ['typedoc-plugin-dt-links', 'typedoc-plugin-coverage', 'typedoc-unhoax-theme'],
   coverageLabel: 'Documentation Coverage',
   coverageOutputType: 'all',
   coverageSvgWidth: 200,

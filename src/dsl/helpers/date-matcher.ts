@@ -1,20 +1,19 @@
-// Provides comprehensive date comparison and validation utilities for Validra.
-// Author: Felix M. Martinez
-//
-// This module exports the DateMatcher class with static methods for date operations.
-//
-// Example usage:
-//   DateMatcher.isAfter(new Date('2025-01-01'), new Date('2024-12-31'));
-//   DateMatcher.isLeapYear(new Date('2024-01-01'));
-//
-// Version: 1.0.0
+/**
+ * @fileoverview Comprehensive date comparison and validation utilities for the Validra library
+ * @module DateMatcher
+ * @version 1.0.0
+ * @author Felix M. Martinez
+ * @since 1.0.0
+ */
 
 import { TypeChecker } from './type-checker';
 
 /**
  * Utility class providing static methods for date comparison and validation operations.
- * All date operations use UTC to avoid timezone-related issues and ensure consistent
- * results across different environments and timezones.
+ *
+ * All date operations use UTC methods to avoid timezone-related issues and ensure consistent
+ * results across different environments and timezones. The class focuses on date-level
+ * comparisons while handling time components appropriately for each use case.
  *
  * @public
  * @since 1.0.0
@@ -23,35 +22,66 @@ import { TypeChecker } from './type-checker';
  * ```typescript
  * // Date comparisons (uses millisecond timestamps, inherently UTC)
  * DateMatcher.isAfter(new Date('2025-01-01'), new Date('2024-12-31')); // true
- * DateMatcher.isToday(new Date()); // true
+ * DateMatcher.isBefore(new Date('2024-01-01'), new Date('2025-01-01')); // true
  *
- * // Date properties (uses UTC methods)
+ * // Today validation (compares date only, ignores time)
+ * DateMatcher.isToday(new Date()); // true if called today
+ *
+ * // Day of week checks (uses UTC methods)
  * DateMatcher.isWeekend(new Date('2025-01-05')); // true (Sunday in UTC)
- * DateMatcher.isLeapYear(new Date('2024-01-01')); // true
+ * DateMatcher.isWeekday(new Date('2025-01-06')); // true (Monday in UTC)
+ *
+ * // Year properties
+ * DateMatcher.isLeapYear(new Date('2024-01-01')); // true (2024 is a leap year)
+ *
+ * // Real-world usage in validation
+ * function validateBirthDate(dateStr: string): boolean {
+ *   const birthDate = new Date(dateStr);
+ *   const today = new Date();
+ *   return DateMatcher.isBefore(birthDate, today) &&
+ *          DateMatcher.isAfter(birthDate, new Date('1900-01-01'));
+ * }
  * ```
+ *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date | MDN Date Documentation}
  */
 export class DateMatcher {
   /**
    * Checks if a date is after another reference date.
-   * Uses millisecond timestamps for comparison, which are timezone-independent.
+   *
+   * Uses millisecond timestamps for comparison, which are timezone-independent
+   * and provide precise temporal ordering. Ideal for validating chronological
+   * sequences and ensuring temporal constraints in data validation.
    *
    * @public
+   * @static
    * @param {Date} date - The date to check
    * @param {Date} reference - The reference date to compare against
    * @returns {boolean} True if date is after the reference date, false otherwise
-   * @throws {Error} Throws if either date or reference is not a valid Date instance
+   * @throws {string} Throws if either date or reference is not a valid Date instance
    *
    * @example
    * ```typescript
-   * const date = new Date('2025-01-01');
-   * const reference = new Date('2024-12-31');
-   * DateMatcher.isAfter(date, reference); // true
+   * const futureDate = new Date('2025-12-31');
+   * const currentDate = new Date('2025-01-01');
+   * DateMatcher.isAfter(futureDate, currentDate); // true
    *
-   * const earlier = new Date('2024-01-01');
-   * DateMatcher.isAfter(earlier, reference); // false
+   * const pastDate = new Date('2024-01-01');
+   * DateMatcher.isAfter(pastDate, currentDate); // false
+   *
+   * // Time precision is maintained
+   * const laterToday = new Date('2025-01-01T15:00:00Z');
+   * const earlierToday = new Date('2025-01-01T09:00:00Z');
+   * DateMatcher.isAfter(laterToday, earlierToday); // true
+   *
+   * // Real-world usage: validate event scheduling
+   * function validateEventDates(startDate: Date, endDate: Date): boolean {
+   *   return DateMatcher.isAfter(endDate, startDate);
+   * }
    * ```
    *
    * @since 1.0.0
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getTime | Date.getTime() Documentation}
    */
   static isAfter(date: Date, reference: Date): boolean {
     if (!TypeChecker.isDate(date) || !TypeChecker.isDate(reference)) {
