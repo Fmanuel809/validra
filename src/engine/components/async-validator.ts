@@ -6,6 +6,7 @@
  * @since 1.0.0
  */
 
+import { ValidraLogger } from '@/utils/validra-logger';
 import type { IDataExtractor } from '../interfaces/data-extractor.interface';
 import type { IMemoryPoolManager } from '../interfaces/memory-pool-manager.interface';
 import type { IRuleCompiler } from '../interfaces/rule-compiler.interface';
@@ -68,6 +69,8 @@ import { Rule } from '../rule';
  * @see {@link ValidraEngine} for synchronous validation alternatives
  */
 export class AsyncValidator implements IAsyncValidator {
+  private readonly logger: ValidraLogger;
+
   /**
    * Creates a new AsyncValidator instance with required dependencies.
    *
@@ -99,7 +102,9 @@ export class AsyncValidator implements IAsyncValidator {
     private readonly ruleCompiler: IRuleCompiler,
     private readonly dataExtractor: IDataExtractor,
     private readonly memoryPoolManager: IMemoryPoolManager,
-  ) {}
+  ) {
+    this.logger = new ValidraLogger('AsyncValidator');
+  }
 
   /**
    * Applies a single validation rule asynchronously to a value with comprehensive error handling.
@@ -154,7 +159,7 @@ export class AsyncValidator implements IAsyncValidator {
    */
   async applyRuleAsync(rule: Rule, value: unknown, args: unknown[]): Promise<boolean> {
     const ruleInfo = `${rule.op}${rule.field ? ` on field "${rule.field}"` : ''}${rule.negative ? ' (negated)' : ''}`;
-    console.debug(`Applying rule: ${ruleInfo} with value:`, value, 'and args:', args);
+    this.logger.debug(`Applying rule: ${ruleInfo} with value:`, value, 'and args:', args);
     return new Promise((resolve, reject) => {
       try {
         setTimeout(() => {

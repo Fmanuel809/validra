@@ -4,6 +4,7 @@
  * These options allow you to control debugging, error handling, memory pool usage, and streaming validation.
  *
  * @property debug - Enable debug logging for the engine.
+ * @property silent - Suppress all logs, overriding debug mode.
  * @property throwOnUnknownField - Throw an error if a field is not recognized by the rules.
  * @property allowPartialValidation - Continue validation after errors (partial validation mode).
  * @property enableMemoryPool - Enable memory pool optimizations for high-frequency validation.
@@ -14,6 +15,7 @@
  * @example
  * const options: ValidraEngineOptions = {
  *   debug: true,
+ *   silent: false,
  *   throwOnUnknownField: false,
  *   allowPartialValidation: true,
  *   enableMemoryPool: true,
@@ -25,18 +27,16 @@
 export interface ValidraEngineOptions {
   /** Enable debug logging */
   debug?: boolean;
+  /** Suppress all logs (overrides debug) */
+  silent?: boolean;
   /** Throw error on unknown fields */
   throwOnUnknownField?: boolean;
   /** Allow partial validation (continue on error) */
   allowPartialValidation?: boolean;
-
-  // Memory Pool optimizations for high-frequency validation
   /** Enable memory pool optimizations */
   enableMemoryPool?: boolean;
   /** Maximum memory pool size */
   memoryPoolSize?: number;
-
-  // Streaming validation for large datasets
   /** Enable streaming validation for large datasets */
   enableStreaming?: boolean;
   /** Chunk size for streaming validation */

@@ -175,6 +175,7 @@ export class ValidraEngine {
     this.rules = rules;
     this.options = {
       debug: false,
+      silent: false,
       throwOnUnknownField: false,
       allowPartialValidation: false,
       enableMemoryPool: true,
@@ -184,10 +185,21 @@ export class ValidraEngine {
       ...options,
     };
 
-    this.logger = new ValidraLogger('ValidraEngine');
+    // Configure global logging options
+    this.logger = new ValidraLogger('ValidraEngine', {
+      debug: this.options.debug,
+      silent: this.options.silent,
+    });
 
     // Initialize components (dependency injection pattern)
-    this.ruleCompiler = dependencies?.ruleCompiler ?? new RuleCompiler(this.logger);
+    this.ruleCompiler =
+      dependencies?.ruleCompiler ??
+      new RuleCompiler(
+        new ValidraLogger('RuleCompiler', {
+          debug: this.options.debug,
+          silent: this.options.silent,
+        }),
+      );
 
     this.dataExtractor = dependencies?.dataExtractor ?? new DataExtractor();
 
@@ -223,14 +235,27 @@ export class ValidraEngine {
       dependencies?.streamValidator ??
       new StreamValidator(this.ruleCompiler, this.dataExtractor, this.memoryPoolManager);
 
-    this.callbackManager = dependencies?.callbackManager ?? new CallbackManager(this.logger);
+    this.callbackManager =
+      dependencies?.callbackManager ??
+      new CallbackManager(
+        new ValidraLogger('CallbackManager', {
+          debug: this.options.debug,
+          silent: this.options.silent,
+        }),
+      );
 
     this.errorHandler =
       dependencies?.errorHandler ??
-      new ErrorHandler(this.logger, {
-        enableRecovery: this.options.allowPartialValidation,
-        logErrors: this.options.debug,
-      });
+      new ErrorHandler(
+        new ValidraLogger('ErrorHandler', {
+          debug: this.options.debug,
+          silent: this.options.silent,
+        }),
+        {
+          enableRecovery: this.options.allowPartialValidation,
+          logErrors: this.options.debug,
+        },
+      );
 
     // Initialize components with rules and callbacks
     this.initializeComponents();
@@ -656,13 +681,12 @@ export class ValidraEngine {
   private logValidationComplete(duration: number, result: ValidraResult<any>, isAsync = false): void {
     const type = isAsync ? 'Async validation' : 'Validation';
 
-    if (this.options.debug) {
-      this.logger.debug(`${type} completed in ${duration.toFixed(2)}ms`, {
-        isValid: result.isValid,
-        duration: `${duration.toFixed(2)}ms`,
-        errorsFound: result.errors ? Object.keys(result.errors) : [],
-      });
-    }
+    // Log debug information - now controlled centrally by logger
+    this.logger.debug(`${type} completed in ${duration.toFixed(2)}ms`, {
+      isValid: result.isValid,
+      duration: `${duration.toFixed(2)}ms`,
+      errorsFound: result.errors ? Object.keys(result.errors) : [],
+    });
 
     // Log warning for slow validations
     if (duration > 100) {

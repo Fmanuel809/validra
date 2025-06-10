@@ -21,6 +21,8 @@
  * - **Parameter Support**: Flexible parameter passing for complex object logging
  * - **Error Integration**: Automatic error throwing with formatted error messages
  * - **Performance Optimized**: Minimal overhead logging operations for production use
+ * - **Centralized Control**: Global debug and silent mode control for all logging operations
+ * - **Color Support**: ANSI color codes for enhanced console readability (zero dependencies)
  *
  * Logging format:
  * `[ISO_TIMESTAMP] [SOURCE_NAME] MESSAGE [OPTIONAL_PARAMETERS]`
@@ -92,6 +94,29 @@
  * });
  * ```
  */
+/**
+ * ANSI color codes for console output styling
+ */
+const COLORS = {
+  reset: '\x1b[0m',
+  red: '\x1b[31m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  green: '\x1b[32m',
+  gray: '\x1b[90m',
+  cyan: '\x1b[36m',
+} as const;
+
+/**
+ * Logging options for controlling ValidraLogger behavior
+ */
+export interface ValidraLoggerOptions {
+  /** Enable debug mode for additional logging */
+  debug?: boolean;
+  /** Suppress all log output when true */
+  silent?: boolean;
+}
+
 export class ValidraLogger {
   /**
    * The source identifier used in all log messages for component identification and filtering.
@@ -102,6 +127,12 @@ export class ValidraLogger {
    */
   protected source = 'Validra Engine';
 
+  /** Global debug mode control - affects all logger instances */
+  public static debugEnabled: boolean = false;
+
+  /** Global silent mode control - affects all logger instances */
+  public static silentMode: boolean = false;
+
   /**
    * Creates a new ValidraLogger instance with configurable source identification for structured logging.
    *
@@ -111,6 +142,7 @@ export class ValidraLogger {
    *
    * @public
    * @param {string} source - Custom source identifier for log message attribution and filtering
+   * @param {ValidraLoggerOptions} options - Optional logging configuration
    *
    * @example
    * ```typescript
@@ -142,14 +174,53 @@ export class ValidraLogger {
    *
    * @since 1.0.0
    */
-  constructor(source: string) {
+  constructor(source: string, options?: ValidraLoggerOptions) {
     if (source) {
       this.source = source;
+    }
+
+    // Set global options if provided
+    if (options?.debug !== undefined) {
+      ValidraLogger.debugEnabled = options.debug;
+    }
+    if (options?.silent !== undefined) {
+      ValidraLogger.silentMode = options.silent;
     }
   }
 
   /**
-   * Logs a general message to the console.
+   * Checks if logging should be suppressed due to silent mode
+   * @private
+   */
+  private shouldSuppressLogging(): boolean {
+    return ValidraLogger.silentMode;
+  }
+
+  /**
+   * Checks if debug logging is enabled
+   * @private
+   */
+  private isDebugEnabled(): boolean {
+    return ValidraLogger.debugEnabled;
+  }
+
+  /**
+   * Formats a message with color and timestamp
+   * @private
+   */
+  private formatMessage(message: string, color?: string): string {
+    const timestamp = this.getTimestamp();
+    const prefix = `[${timestamp}] [${this.source}]`;
+    const formattedMessage = `${prefix} ${message}`;
+
+    if (color) {
+      return `${color}${formattedMessage}${COLORS.reset}`;
+    }
+    return formattedMessage;
+  }
+
+  /**
+   * Logs a general message to the console with enhanced formatting and centralized control.
    *
    * @param message - The message to log
    * @param optionalParams - Additional parameters to include in the log
@@ -160,11 +231,14 @@ export class ValidraLogger {
    * ```
    */
   log(message: string, ...optionalParams: any[]): void {
-    console.log(`[${this.getTimestamp()}] [${this.source}] ${message}`, ...optionalParams);
+    if (this.shouldSuppressLogging()) {
+      return;
+    }
+    console.log(this.formatMessage(message, COLORS.gray), ...optionalParams);
   }
 
   /**
-   * Logs a warning message to the console.
+   * Logs a warning message to the console with enhanced formatting and centralized control.
    *
    * @param message - The warning message to log
    * @param optionalParams - Additional parameters to include in the warning
@@ -175,33 +249,32 @@ export class ValidraLogger {
    * ```
    */
   warn(message: string, ...optionalParams: any[]): void {
-    console.warn(`[${this.getTimestamp()}] [${this.source}] ${message}`, ...optionalParams);
+    if (this.shouldSuppressLogging()) {
+      return;
+    }
+    console.warn(this.formatMessage(message, COLORS.yellow), ...optionalParams);
   }
 
   /**
-   * Logs an error message to the console and throws an Error.
+   * Logs an error message to the console with enhanced formatting and centralized control.
    *
    * @param message - The error message to log
    * @param optionalParams - Additional parameters to include in the error
-   * @throws {Error} Always throws an Error with the formatted message
    *
    * @example
    * ```typescript
-   * try {
-   *   logger.error("Critical validation failure", { code: "VAL001" });
-   * } catch (error) {
-   *   // Handle the thrown error
-   * }
+   * logger.error("Critical validation failure", { code: "VAL001" });
    * ```
    */
   error(message: string, ...optionalParams: any[]): void {
-    const timestamp = this.getTimestamp();
-    console.error(`[${timestamp}] [${this.source}] ${message}`, ...optionalParams);
-    throw new Error(`[${timestamp}] [${this.source}] ${message}`);
+    if (this.shouldSuppressLogging()) {
+      return;
+    }
+    console.error(this.formatMessage(message, COLORS.red), ...optionalParams);
   }
 
   /**
-   * Logs an informational message to the console.
+   * Logs an informational message to the console with enhanced formatting and centralized control.
    *
    * @param message - The info message to log
    * @param optionalParams - Additional parameters to include in the info log
@@ -212,11 +285,15 @@ export class ValidraLogger {
    * ```
    */
   info(message: string, ...optionalParams: any[]): void {
-    console.info(`[${this.getTimestamp()}] [${this.source}] ${message}`, ...optionalParams);
+    if (this.shouldSuppressLogging()) {
+      return;
+    }
+    console.info(this.formatMessage(message, COLORS.blue), ...optionalParams);
   }
 
   /**
-   * Logs a debug message to the console.
+   * Logs a debug message to the console with enhanced formatting and centralized control.
+   * Only outputs if debug mode is enabled and silent mode is disabled.
    *
    * @param message - The debug message to log
    * @param optionalParams - Additional parameters to include in the debug log
@@ -227,11 +304,15 @@ export class ValidraLogger {
    * ```
    */
   debug(message: string, ...optionalParams: any[]): void {
-    console.debug(`[${this.getTimestamp()}] [${this.source}] ${message}`, ...optionalParams);
+    if (this.shouldSuppressLogging() || !this.isDebugEnabled()) {
+      return;
+    }
+    console.debug(this.formatMessage(message, COLORS.cyan), ...optionalParams);
   }
 
   /**
-   * Logs a trace message with stack trace to the console.
+   * Logs a trace message with stack trace to the console with enhanced formatting and centralized control.
+   * Only outputs if debug mode is enabled and silent mode is disabled.
    *
    * @param message - The trace message to log
    * @param optionalParams - Additional parameters to include in the trace log
@@ -242,7 +323,10 @@ export class ValidraLogger {
    * ```
    */
   trace(message: string, ...optionalParams: any[]): void {
-    console.trace(`[${this.getTimestamp()}] [${this.source}] ${message}`, ...optionalParams);
+    if (this.shouldSuppressLogging() || !this.isDebugEnabled()) {
+      return;
+    }
+    console.trace(this.formatMessage(message, COLORS.green), ...optionalParams);
   }
 
   /**

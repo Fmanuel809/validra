@@ -111,7 +111,10 @@ export class SyncValidator implements ISyncValidator {
     dataExtractor: IDataExtractor,
     memoryPoolManager: IMemoryPoolManager,
   ) {
-    this.logger = new ValidraLogger('SyncValidator');
+    this.logger = new ValidraLogger('SyncValidator', {
+      debug: options.debug ?? false,
+      silent: false, // SyncValidator doesn't control silent mode directly
+    });
     this.options = options;
     this.dataExtractor = dataExtractor;
     this.memoryPoolManager = memoryPoolManager;
@@ -171,9 +174,8 @@ export class SyncValidator implements ISyncValidator {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const detailedMessage = `Error in operation '${rule.op}' on field '${rule.field}': ${errorMessage}`;
 
-      if (this.options.debug) {
-        this.logger.debug(`Rule application failed: ${detailedMessage}`);
-      }
+      // Log debug information - now controlled centrally by logger
+      this.logger.debug(`Rule application failed: ${detailedMessage}`);
 
       throw new Error(detailedMessage);
     }
@@ -219,14 +221,13 @@ export class SyncValidator implements ISyncValidator {
 
     let errorCount = 0;
 
-    if (this.options.debug) {
-      this.logger.debug(`Starting sync validation with ${rules.length} rules`, {
-        failFast,
-        maxErrors,
-        dataKeys: Object.keys(data),
-        usePoolForResult,
-      });
-    }
+    // Log validation start - now controlled centrally by logger
+    this.logger.debug(`Starting sync validation with ${rules.length} rules`, {
+      failFast,
+      maxErrors,
+      dataKeys: Object.keys(data),
+      usePoolForResult,
+    });
 
     for (const rule of rules) {
       try {
@@ -266,24 +267,22 @@ export class SyncValidator implements ISyncValidator {
           errorCount++;
 
           if (failFast || errorCount >= maxErrors) {
-            if (this.options.debug) {
-              this.logger.debug('Stopping validation early', {
-                reason: failFast ? 'failFast' : 'maxErrors',
-                errorCount,
-              });
-            }
+            // Log early termination - now controlled centrally by logger
+            this.logger.debug('Stopping validation early', {
+              reason: failFast ? 'failFast' : 'maxErrors',
+              errorCount,
+            });
             break;
           }
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
 
-        if (this.options.debug) {
-          this.logger.warn(`Error applying rule ${rule.op} on field ${rule.field}`, {
-            error: errorMessage,
-            rule,
-          });
-        }
+        // Log error - now controlled centrally by logger
+        this.logger.warn(`Error applying rule ${rule.op} on field ${rule.field}`, {
+          error: errorMessage,
+          rule,
+        });
 
         if (!this.options.allowPartialValidation) {
           if (this.options.throwOnUnknownField) {
@@ -304,13 +303,12 @@ export class SyncValidator implements ISyncValidator {
     const endTime = performance.now();
     const duration = endTime - startTime;
 
-    if (this.options.debug) {
-      this.logger.debug(`Sync validation completed in ${duration.toFixed(2)}ms`, {
-        isValid: result.isValid,
-        errorsFound: result.errors ? Object.keys(result.errors).length : 0,
-        usePoolForResult,
-      });
-    }
+    // Log completion - now controlled centrally by logger
+    this.logger.debug(`Sync validation completed in ${duration.toFixed(2)}ms`, {
+      isValid: result.isValid,
+      errorsFound: result.errors ? Object.keys(result.errors).length : 0,
+      usePoolForResult,
+    });
 
     return result;
   }

@@ -4,12 +4,17 @@ import { ErrorHandler } from '../../../src/engine/components/error-handler';
 describe('ErrorHandler', () => {
   it('handles string error and context', () => {
     const handler = new ErrorHandler();
-    expect(() => handler.handleError('fail', { field: 'x' })).toThrow();
+    const result = handler.handleError('fail', { field: 'x' });
+    expect(result).toBeDefined();
+    expect(result.message).toBe('fail');
+    expect(result.field).toBe('x');
   });
 
   it('handles Error object', () => {
     const handler = new ErrorHandler();
-    expect(() => handler.handleError(new Error('fail'), {})).toThrow();
+    const result = handler.handleError(new Error('fail'), {});
+    expect(result).toBeDefined();
+    expect(result.message).toBe('fail');
   });
 
   it('configures options', () => {
@@ -20,11 +25,7 @@ describe('ErrorHandler', () => {
 
   it('clears errors', () => {
     const handler = new ErrorHandler();
-    try {
-      handler.handleError('fail', {});
-    } catch {
-      /* ignorar error */
-    }
+    handler.handleError('fail', {});
     handler.clearErrors();
     expect(handler.getStatistics().totalErrors).toBe(0);
   });
