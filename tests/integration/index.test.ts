@@ -32,7 +32,7 @@ import {
   // Interface exports
   type ValidraResult,
 } from '../../src/index';
-import { basicUserRules, createSuccessCallback, invalidTestData, validTestData } from './fixtures';
+import { basicUserRules, invalidTestData, validTestData } from './fixtures';
 
 describe('Validra Main Index Integration Tests', () => {
   describe('Engine Exports', () => {
@@ -204,8 +204,8 @@ describe('Validra Main Index Integration Tests', () => {
       expect(typeof metrics.allocations).toBe('number');
     });
 
-    it('should be able to create engine with callbacks', () => {
-      const engine = new ValidraEngine(basicUserRules, [createSuccessCallback('customTestCallback')]);
+    it('should be able to create engine without callbacks', () => {
+      const engine = new ValidraEngine(basicUserRules);
 
       expect(engine).toBeInstanceOf(ValidraEngine);
 

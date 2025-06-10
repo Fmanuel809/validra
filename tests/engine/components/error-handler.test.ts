@@ -134,14 +134,18 @@ describe('ErrorHandler', () => {
 
   it('hasReachedLimit returns false when maxErrors is not set', () => {
     const handler = new ErrorHandler();
+
+    // Add some errors
     handler.addError({
-      message: 'Error',
-      code: 'E',
+      message: 'Error 1',
+      code: 'ERR_001',
       severity: 'high',
       category: 'validation',
       timestamp: Date.now(),
       recoverable: true,
     });
+
+    // This should test line 306 - when maxErrors is not set, return false
     expect(handler.hasReachedLimit()).toBe(false);
   });
 
@@ -467,5 +471,29 @@ describe('ErrorHandler', () => {
     // No strategy registered for 'timeout'
     const count = await handler.attemptRecovery();
     expect(count).toBe(0);
+  });
+
+  it('should handle errors with missing code property', () => {
+    const handler = new ErrorHandler();
+
+    // Add error without code to test line 377 - default to 'UNKNOWN_ERROR'
+    handler.addError({
+      message: 'Error without code',
+      severity: 'high',
+      category: 'validation',
+      timestamp: Date.now(),
+      recoverable: true,
+      field: 'testField',
+      // code is intentionally omitted
+    } as any);
+
+    const result = handler.formatForResult({ testField: 'value' });
+    expect(result.errors).toBeDefined();
+    expect(result.errors!.testField).toBeDefined();
+    expect(result.errors!.testField?.[0]).toEqual({
+      // eslint-disable-next-line quotes
+      message: "HIGH: Field 'testField': Error without code",
+      code: 'UNKNOWN_ERROR', // Should default to this
+    });
   });
 });

@@ -122,4 +122,76 @@ describe('SyncValidator', () => {
       expect.objectContaining({ reason: 'maxErrors' }),
     );
   });
+
+  it('should use memory pool for validation result when enabled', () => {
+    const mockMemoryPoolWithResult = {
+      ...mockMemoryPoolManager,
+      shouldPoolValidationResult: vi.fn(() => true),
+      getValidationResult: vi.fn(() => ({
+        isValid: false,
+        data: null,
+        errors: { field: ['error'] },
+        message: 'old message',
+      })),
+    };
+
+    const validator = new SyncValidator({}, mockDataExtractor as any, mockMemoryPoolWithResult as any);
+
+    const result = validator.validate({ x: 1 }, [rule]);
+
+    // This should test lines 206-211 - memory pool usage for validation result
+    expect(mockMemoryPoolWithResult.shouldPoolValidationResult).toHaveBeenCalled();
+    expect(mockMemoryPoolWithResult.getValidationResult).toHaveBeenCalled();
+    expect(result.isValid).toBe(true); // Should be reset
+    expect(result.errors).toEqual({}); // Should be reset
+    expect(result.message).toBeUndefined(); // Should be deleted
+  });
+
+  it('should use memory pool for arguments when enabled', () => {
+    const mockMemoryPoolWithArgs = {
+      ...mockMemoryPoolManager,
+      shouldPoolArguments: vi.fn(() => true),
+      getArgumentsArray: vi.fn(() => []),
+      returnArgumentsArray: vi.fn(),
+    };
+
+    const validator = new SyncValidator({}, mockDataExtractor as any, mockMemoryPoolWithArgs as any);
+
+    const ruleWithParams = { op: 'eq', field: 'x', params: { value: 1, other: 'test' } } as any;
+    validator.validate({ x: 1 }, [ruleWithParams]);
+
+    // This should test lines 246-248 - memory pool usage for arguments
+    expect(mockMemoryPoolWithArgs.shouldPoolArguments).toHaveBeenCalled();
+    expect(mockMemoryPoolWithArgs.getArgumentsArray).toHaveBeenCalled();
+    expect(mockMemoryPoolWithArgs.returnArgumentsArray).toHaveBeenCalled();
+  });
+
+  it('should handle rules without parameters', () => {
+    const validator = new SyncValidator({}, mockDataExtractor as any, mockMemoryPoolManager as any);
+
+    const ruleWithoutParams = { op: 'eq', field: 'x' } as any; // No params property
+
+    // This should test lines 260-261 - when no params, args should be empty array
+    const result = validator.validate({ x: 1 }, [ruleWithoutParams]);
+
+    expect(result).toBeDefined();
+    expect(typeof result.isValid).toBe('boolean');
+  });
+
+  it('should break early on error when failFast or maxErrors reached', () => {
+    const validator = new SyncValidator({}, mockDataExtractor as any, mockMemoryPoolManager as any);
+
+    // Create rules that will fail
+    const failingRules = [
+      { op: 'eq', field: 'x', params: { value: 999 } },
+      { op: 'eq', field: 'y', params: { value: 999 } },
+      { op: 'eq', field: 'z', params: { value: 999 } },
+    ] as any[];
+
+    // Test with maxErrors = 1 to trigger line 299-300
+    const result = validator.validate({ x: 1, y: 2, z: 3 }, failingRules, { maxErrors: 1 });
+
+    expect(result.isValid).toBe(false);
+    expect(Object.keys(result.errors || {}).length).toBe(1); // Should stop after first error
+  });
 });

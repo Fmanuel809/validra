@@ -1,27 +1,17 @@
-import type { ValidraCallback } from '@/engine/interfaces';
 import type { Rule } from '@/engine/rule';
 import { ValidraEngine } from '@/engine/validra-engine';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  basicUserRules,
-  createSuccessCallback,
-  customMessageRules,
-  invalidTestData,
-  negativeRules,
-  validTestData,
-} from './fixtures';
+import { basicUserRules, customMessageRules, invalidTestData, negativeRules, validTestData } from './fixtures';
 
 describe('ValidraEngine - Basic Integration Tests', () => {
   let engine: ValidraEngine;
   let basicRules: Rule[];
-  let callbacks: ValidraCallback[];
 
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks();
     basicRules = basicUserRules;
-    callbacks = [createSuccessCallback('onValidation')];
-    engine = new ValidraEngine(basicRules, callbacks, { debug: false });
+    engine = new ValidraEngine(basicRules, { debug: false });
   });
 
   describe('Synchronous Validation', () => {
@@ -43,28 +33,8 @@ describe('ValidraEngine - Basic Integration Tests', () => {
       expect(result.errors).toHaveProperty('name');
     });
 
-    it('should execute named callback on validation completion', () => {
-      engine.validate(validTestData.basicUser, 'onValidation');
-
-      expect(callbacks[0]?.callback).toHaveBeenCalledWith(
-        expect.objectContaining({
-          isValid: true,
-          data: validTestData.basicUser,
-        }),
-      );
-    });
-
-    it('should execute function callback on validation completion', () => {
-      const callbackFn = vi.fn();
-      engine.validate(validTestData.userWithMinimalName, callbackFn);
-
-      expect(callbackFn).toHaveBeenCalledWith(
-        expect.objectContaining({
-          isValid: true,
-          data: validTestData.userWithMinimalName,
-        }),
-      );
-    });
+    // Note: Callback tests removed as part of ValidraCallback system elimination
+    // The advanced ValidationCallbacks system should be tested separately via CallbackManager
 
     it('should throw error for invalid data types', () => {
       expect(() => engine.validate(invalidTestData.nullData as any)).toThrow('Data must be a valid object');
@@ -73,18 +43,6 @@ describe('ValidraEngine - Basic Integration Tests', () => {
       expect(() => engine.validate(invalidTestData.numberData as any)).toThrow('Data must be a valid object');
       expect(() => engine.validate(invalidTestData.dateData as any)).toThrow('Data must be a valid object');
       expect(() => engine.validate(invalidTestData.functionData as any)).toThrow('Data must be a valid object');
-    });
-
-    it('should throw error for non-existent named callback', () => {
-      expect(() => engine.validate(validTestData.basicUser, 'nonExistentCallback')).toThrow(
-        'Callback with name "nonExistentCallback" not found.',
-      );
-    });
-
-    it('should throw error for invalid callback type', () => {
-      expect(() => engine.validate(validTestData.basicUser, 123 as any)).toThrow(
-        'Callback must be a string or a function.',
-      );
     });
   });
 
@@ -98,7 +56,7 @@ describe('ValidraEngine - Basic Integration Tests', () => {
         bio: 'designer',
       };
 
-      const result = engine.validate(invalidData, undefined, { failFast: true });
+      const result = engine.validate(invalidData, { failFast: true });
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();
@@ -115,7 +73,7 @@ describe('ValidraEngine - Basic Integration Tests', () => {
         bio: 'designer',
       };
 
-      const result = engine.validate(invalidData, undefined, { maxErrors: 2 });
+      const result = engine.validate(invalidData, { maxErrors: 2 });
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();

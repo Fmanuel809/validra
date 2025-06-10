@@ -9,7 +9,7 @@
 
 import { Rule } from '@/engine/rule';
 import { ValidraEngine } from '@/engine/validra-engine';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import {
   basicUserRules,
   customMessageRules,
@@ -25,7 +25,7 @@ describe('ValidraEngine - Async Integration Tests', () => {
 
   beforeEach(() => {
     basicRules = basicUserRules;
-    engine = new ValidraEngine(basicRules, [], { debug: false });
+    engine = new ValidraEngine(basicRules, { debug: false });
   });
 
   describe('validateAsync() - Basic functionality', () => {
@@ -65,37 +65,8 @@ describe('ValidraEngine - Async Integration Tests', () => {
     });
   });
 
-  describe('validateAsync() - Callbacks', () => {
-    test('should execute function callback after validation', async () => {
-      const callbackFn = vi.fn();
-      const result = await engine.validateAsync(validTestData.basicUser, callbackFn);
-
-      expect(callbackFn).toHaveBeenCalledWith(result);
-      expect(callbackFn).toHaveBeenCalledTimes(1);
-    });
-
-    test('should execute named callback after validation', async () => {
-      const namedCallback = vi.fn();
-      const callbacks = [{ name: 'testCallback', callback: namedCallback }];
-      const engineWithCallback = new ValidraEngine(basicUserRules, callbacks);
-      const result = await engineWithCallback.validateAsync(validTestData.basicUser, 'testCallback');
-
-      expect(namedCallback).toHaveBeenCalledWith(result);
-    });
-
-    test('should handle async callback functions', async () => {
-      const asyncCallback = vi.fn().mockResolvedValue(undefined);
-      await engine.validateAsync(validTestData.basicUser, asyncCallback);
-
-      expect(asyncCallback).toHaveBeenCalledTimes(1);
-    });
-
-    test('should throw error for non-existent named callback', async () => {
-      await expect(engine.validateAsync(validTestData.basicUser, 'nonExistentCallback')).rejects.toThrow(
-        'Callback with name "nonExistentCallback" not found',
-      );
-    });
-  });
+  // Note: Async callback tests removed as part of ValidraCallback system elimination
+  // The advanced ValidationCallbacks system should be tested separately via CallbackManager
 
   describe('validateAsync() - Error handling', () => {
     test('should throw error for invalid input data', async () => {
@@ -221,7 +192,7 @@ describe('ValidraEngine - Async Integration Tests', () => {
 
   describe('validateAsync() - Engine options', () => {
     test('should respect debug option', async () => {
-      const debugEngine = new ValidraEngine(basicRules, [], { debug: true });
+      const debugEngine = new ValidraEngine(basicRules, { debug: true });
       const testData = {
         name: 'Debug Test',
         email: 'debug@test.com',
@@ -235,7 +206,7 @@ describe('ValidraEngine - Async Integration Tests', () => {
     });
 
     test('should handle partial validation when enabled', async () => {
-      const partialEngine = new ValidraEngine(basicRules, [], {
+      const partialEngine = new ValidraEngine(basicRules, {
         allowPartialValidation: true,
       });
 
@@ -251,7 +222,7 @@ describe('ValidraEngine - Async Integration Tests', () => {
     });
 
     test('should work with memory pool enabled', async () => {
-      const memoryPoolEngine = new ValidraEngine(basicRules, [], {
+      const memoryPoolEngine = new ValidraEngine(basicRules, {
         enableMemoryPool: true,
         memoryPoolSize: 50,
       });

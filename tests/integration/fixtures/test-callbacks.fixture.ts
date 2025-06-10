@@ -1,72 +1,89 @@
 /**
- * Common callback fixtures for integration tests.
- * Provides reusable callback configurations for different testing scenarios.
+ * Common ValidationCallbacks fixtures for integration tests.
+ * Provides reusable ValidationCallbacks configurations for different testing scenarios.
  *
  * @category Test Fixtures
  */
 
-import { ValidraCallback, ValidraResult } from '@/engine/interfaces';
+import { ValidationCallbacks, ValidraResult } from '@/engine/interfaces';
 import { expect, vi } from 'vitest';
 
 /**
- * Basic success callback for testing
+ * Basic success ValidationCallbacks for testing
  */
-export const createSuccessCallback = (name: string = 'successCallback'): ValidraCallback => ({
-  name,
-  callback: vi.fn().mockImplementation((result: ValidraResult) => {
+export const createSuccessCallbacks = (_name: string = 'successCallbacks'): ValidationCallbacks => ({
+  onStart: vi.fn().mockImplementation(data => {
+    console.log('Validation started for:', data);
+  }),
+  onComplete: vi.fn().mockImplementation((result: ValidraResult) => {
     console.log(`Validation completed: ${result.isValid}`);
   }),
 });
 
 /**
- * Basic error callback for testing
+ * Error-throwing ValidationCallbacks for testing
  */
-export const createErrorCallback = (name: string = 'errorCallback'): ValidraCallback => ({
-  name,
-  callback: vi.fn().mockImplementation(() => {
+export const createErrorCallbacks = (_name: string = 'errorCallbacks'): ValidationCallbacks => ({
+  onStart: vi.fn(),
+  onComplete: vi.fn().mockImplementation(() => {
     throw new Error('Callback error');
   }),
 });
 
 /**
- * Async callback for testing asynchronous operations
+ * Async ValidationCallbacks for testing asynchronous operations
  */
-export const createAsyncCallback = (name: string = 'asyncCallback'): ValidraCallback => ({
-  name,
-  callback: vi.fn().mockImplementation(async (result: ValidraResult) => {
+export const createAsyncCallbacks = (_name: string = 'asyncCallbacks'): ValidationCallbacks => ({
+  onStart: vi.fn().mockImplementation(async data => {
     // Simulate async operation
     await new Promise(resolve => setTimeout(resolve, 10));
+    console.log('Async start completed for:', data);
+  }),
+  onComplete: vi.fn().mockImplementation(async (result: ValidraResult) => {
+    // Simulate async operation
+    await new Promise(resolve => setTimeout(resolve, 10));
+    console.log('Async complete finished:', result.isValid);
     return result;
   }),
 });
 
 /**
- * Callback that modifies result data
+ * ValidationCallbacks that modifies result data
  */
-export const createModifyingCallback = (name: string = 'modifyingCallback'): ValidraCallback => ({
-  name,
-  callback: vi.fn().mockImplementation((result: ValidraResult) => {
+export const createModifyingCallbacks = (_name: string = 'modifyingCallbacks'): ValidationCallbacks => ({
+  onStart: vi.fn().mockImplementation(data => {
+    if (data && typeof data === 'object') {
+      (data as any).startTimestamp = Date.now();
+    }
+  }),
+  onComplete: vi.fn().mockImplementation((result: ValidraResult) => {
     if (result.data && typeof result.data === 'object') {
       (result.data as any).modified = true;
+      (result.data as any).endTimestamp = Date.now();
     }
     return result;
   }),
 });
 
 /**
- * Callback that tracks validation metrics
+ * ValidationCallbacks that tracks validation metrics
  */
-export const createMetricsCallback = (name: string = 'metricsCallback'): ValidraCallback => {
+export const createMetricsCallbacks = (_name: string = 'metricsCallbacks'): ValidationCallbacks => {
   const metrics = {
     totalValidations: 0,
     successfulValidations: 0,
     failedValidations: 0,
+    startTime: 0,
+    endTime: 0,
   };
 
   return {
-    name,
-    callback: vi.fn().mockImplementation((result: ValidraResult) => {
+    onStart: vi.fn().mockImplementation(() => {
       metrics.totalValidations++;
+      metrics.startTime = Date.now();
+    }),
+    onComplete: vi.fn().mockImplementation((result: ValidraResult) => {
+      metrics.endTime = Date.now();
       if (result.isValid) {
         metrics.successfulValidations++;
       } else {
@@ -78,31 +95,39 @@ export const createMetricsCallback = (name: string = 'metricsCallback'): Validra
 };
 
 /**
- * Callback that logs detailed validation results
+ * ValidationCallbacks that logs detailed validation results
  */
-export const createLoggingCallback = (name: string = 'loggingCallback'): ValidraCallback => ({
-  name,
-  callback: vi.fn().mockImplementation((result: ValidraResult) => {
+export const createLoggingCallbacks = (_name: string = 'loggingCallbacks'): ValidationCallbacks => ({
+  onStart: vi.fn().mockImplementation(data => {
     const logEntry = {
       timestamp: new Date().toISOString(),
+      event: 'validation_start',
+      dataFields: data ? Object.keys(data as object) : [],
+    };
+    console.log('Validation start log:', logEntry);
+  }),
+  onComplete: vi.fn().mockImplementation((result: ValidraResult) => {
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      event: 'validation_complete',
       isValid: result.isValid,
       errorCount: result.errors ? Object.keys(result.errors).length : 0,
       dataFields: result.data ? Object.keys(result.data as object) : [],
     };
-    console.log('Validation log:', logEntry);
+    console.log('Validation complete log:', logEntry);
     return logEntry;
   }),
 });
 
 /**
- * Callback that throws specific error types
+ * ValidationCallbacks that throws specific error types
  */
-export const createSpecificErrorCallback = (
+export const createSpecificErrorCallbacks = (
   errorType: 'TypeError' | 'ReferenceError' | 'Error' = 'Error',
-  name: string = 'specificErrorCallback',
-): ValidraCallback => ({
-  name,
-  callback: vi.fn().mockImplementation(() => {
+  _name: string = 'specificErrorCallbacks',
+): ValidationCallbacks => ({
+  onStart: vi.fn(),
+  onComplete: vi.fn().mockImplementation(() => {
     switch (errorType) {
       case 'TypeError':
         throw new TypeError('Type error in callback');
@@ -115,11 +140,13 @@ export const createSpecificErrorCallback = (
 });
 
 /**
- * Callback that validates callback was called with correct parameters
+ * ValidationCallbacks that validates callback was called with correct parameters
  */
-export const createValidationCallback = (name: string = 'validationCallback'): ValidraCallback => ({
-  name,
-  callback: vi.fn().mockImplementation((result: ValidraResult) => {
+export const createValidationCallbacks = (_name: string = 'validationCallbacks'): ValidationCallbacks => ({
+  onStart: vi.fn().mockImplementation(data => {
+    expect(data).toBeDefined();
+  }),
+  onComplete: vi.fn().mockImplementation((result: ValidraResult) => {
     // Validate that result has expected structure
     expect(result).toHaveProperty('isValid');
     expect(result).toHaveProperty('data');
@@ -130,61 +157,42 @@ export const createValidationCallback = (name: string = 'validationCallback'): V
 });
 
 /**
- * Callback that simulates slow processing
+ * ValidationCallbacks that simulates slow processing
  */
-export const createSlowCallback = (delay: number = 100, name: string = 'slowCallback'): ValidraCallback => ({
-  name,
-  callback: vi.fn().mockImplementation(async (result: ValidraResult) => {
+export const createSlowCallbacks = (delay: number = 100, _name: string = 'slowCallbacks'): ValidationCallbacks => ({
+  onStart: vi.fn().mockImplementation(async data => {
+    await new Promise(resolve => setTimeout(resolve, delay / 2));
+    console.log('Slow start completed for:', data);
+  }),
+  onComplete: vi.fn().mockImplementation(async (result: ValidraResult) => {
     await new Promise(resolve => setTimeout(resolve, delay));
+    console.log('Slow complete finished:', result.isValid);
     return result;
   }),
 });
 
 /**
- * Callback collections for different test scenarios
+ * ValidationCallbacks collections for different test scenarios
  */
 export const callbackCollections = {
-  success: [createSuccessCallback()],
-  error: [createErrorCallback()],
-  async: [createAsyncCallback()],
-  modifying: [createModifyingCallback()],
-  metrics: [createMetricsCallback()],
-  logging: [createLoggingCallback()],
-  mixed: [createSuccessCallback('success1'), createLoggingCallback('logger'), createMetricsCallback('metrics')],
-  errorMixed: [
-    createSuccessCallback('beforeError'),
-    createErrorCallback('errorMiddle'),
-    createSuccessCallback('afterError'),
-  ],
+  success: createSuccessCallbacks(),
+  error: createErrorCallbacks(),
+  async: createAsyncCallbacks(),
+  modifying: createModifyingCallbacks(),
+  metrics: createMetricsCallbacks(),
+  logging: createLoggingCallbacks(),
 };
 
 /**
- * Helper function to create multiple callbacks with different names
+ * Helper function to create ValidationCallbacks that expects specific validation results
  */
-export function createMultipleCallbacks(
-  count: number,
-  callbackFactory: (name: string) => ValidraCallback = createSuccessCallback,
-): ValidraCallback[] {
-  return Array.from({ length: count }, (_, i) => callbackFactory(`callback${i + 1}`));
-}
-
-/**
- * Helper function to get callbacks by scenario name
- */
-export function getCallbacks(scenario: keyof typeof callbackCollections): ValidraCallback[] {
-  return callbackCollections[scenario];
-}
-
-/**
- * Helper function to create a callback that expects specific validation results
- */
-export function createExpectedResultCallback(
+export function createExpectedResultCallbacks(
   expectedIsValid: boolean,
-  name: string = 'expectedResultCallback',
-): ValidraCallback {
+  _name: string = 'expectedResultCallbacks',
+): ValidationCallbacks {
   return {
-    name,
-    callback: vi.fn().mockImplementation((result: ValidraResult) => {
+    onStart: vi.fn(),
+    onComplete: vi.fn().mockImplementation((result: ValidraResult) => {
       expect(result.isValid).toBe(expectedIsValid);
       if (expectedIsValid) {
         expect(result.errors).toEqual({});
@@ -198,13 +206,18 @@ export function createExpectedResultCallback(
 }
 
 /**
- * Mock callback manager for testing
+ * Helper function to get ValidationCallbacks by scenario name
+ */
+export function getCallbacks(scenario: keyof typeof callbackCollections): ValidationCallbacks {
+  return callbackCollections[scenario];
+}
+
+/**
+ * Mock callback manager for testing ValidationCallbacks
  */
 export const createMockCallbackManager = () => ({
-  addCallback: vi.fn(),
-  removeCallback: vi.fn(),
-  executeCallback: vi.fn(),
-  getCallback: vi.fn(),
-  getAllCallbacks: vi.fn().mockReturnValue([]),
-  clearCallbacks: vi.fn(),
+  setCallbacks: vi.fn(),
+  triggerStart: vi.fn(),
+  triggerComplete: vi.fn(),
+  hasCallbacks: vi.fn().mockReturnValue(false),
 });

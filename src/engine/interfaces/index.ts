@@ -1,5 +1,4 @@
 export * from './streaming-result';
-export * from './validra-callback';
 export * from './validra-options';
 export * from './validra-result';
 

@@ -24,7 +24,7 @@ describe('ValidraEngine - Streaming Integration Tests', () => {
     basicRules = basicUserRules;
 
     // Streaming-optimized engine
-    streamingEngine = new ValidraEngine(basicRules, [], {
+    streamingEngine = new ValidraEngine(basicRules, {
       debug: false,
       enableStreaming: true,
       streamingChunkSize: 3, // Small chunk size for testing
@@ -281,7 +281,7 @@ describe('ValidraEngine - Streaming Integration Tests', () => {
         { op: 'isObject', field: 'user.metadata' },
       ];
 
-      const complexEngine = new ValidraEngine(complexRules, [], {
+      const complexEngine = new ValidraEngine(complexRules, {
         enableStreaming: true,
         streamingChunkSize: 2,
       });
@@ -316,7 +316,7 @@ describe('ValidraEngine - Streaming Integration Tests', () => {
     });
 
     test('should work with streaming disabled', async () => {
-      const standardEngine = new ValidraEngine(basicRules, [], {
+      const standardEngine = new ValidraEngine(basicRules, {
         enableStreaming: false, // Streaming disabled
       });
 

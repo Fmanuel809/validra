@@ -3,7 +3,6 @@ import {
   StreamingValidationOptions,
   StreamingValidationResult,
   StreamingValidationSummary,
-  ValidraCallback,
   ValidraEngineOptions,
   ValidraResult,
 } from './interfaces';
@@ -88,7 +87,7 @@ import { SyncValidator } from './components/sync-validator';
  * ```
  *
  * @see {@link ValidraEngineOptions} for configuration options
- * @see {@link ValidraCallback} for callback system details
+ * @see {@link ValidationCallbacks} for advanced callback system details
  * @see {@link ValidraResult} for result structure
  *
  * @public
@@ -97,7 +96,6 @@ import { SyncValidator } from './components/sync-validator';
  */
 export class ValidraEngine {
   private readonly rules: Rule[];
-  private readonly callbacks: ValidraCallback[];
   private readonly options: Required<ValidraEngineOptions>;
   private readonly logger: ValidraLogger;
 
@@ -161,7 +159,6 @@ export class ValidraEngine {
    */
   constructor(
     rules: Rule[],
-    callbacks: ValidraCallback[] = [],
     options: ValidraEngineOptions = {},
     dependencies?: {
       ruleCompiler?: IRuleCompiler;
@@ -176,7 +173,6 @@ export class ValidraEngine {
     },
   ) {
     this.rules = rules;
-    this.callbacks = callbacks;
     this.options = {
       debug: false,
       throwOnUnknownField: false,
@@ -279,17 +275,10 @@ export class ValidraEngine {
    * @example With Options
    * ```typescript
    * // Stop on first error
-   * const result = engine.validate(data, undefined, { failFast: true });
+   * const result = engine.validate(data, { failFast: true });
    *
    * // Limit error collection
-   * const result = engine.validate(data, undefined, { maxErrors: 5 });
-   * ```
-   *
-   * @example With Callback
-   * ```typescript
-   * const result = engine.validate(data, (result) => {
-   *   console.log('Validation completed:', result.isValid);
-   * });
+   * const result = engine.validate(data, { maxErrors: 5 });
    * ```
    *
    * @see {@link ValidraResult} for detailed result structure
@@ -301,7 +290,6 @@ export class ValidraEngine {
    */
   public validate<T extends Record<string, any>>(
     data: T,
-    callback?: string | ((result: ValidraResult<T>) => void),
     options?: { failFast?: boolean; maxErrors?: number },
   ): ValidraResult<T> {
     const startTime = performance.now();
@@ -321,9 +309,6 @@ export class ValidraEngine {
 
       // Trigger completion callback
       this.callbackManager.triggerComplete(result);
-
-      // Execute user callback if provided
-      this.executeCallback(callback, result);
 
       const duration = performance.now() - startTime;
       this.logValidationComplete(duration, result, false);
@@ -374,14 +359,6 @@ export class ValidraEngine {
    * }
    * ```
    *
-   * @example With Async Callback
-   * ```typescript
-   * const result = await engine.validateAsync(data, async (result) => {
-   *   await logValidationResult(result);
-   *   await sendNotification(result);
-   * });
-   * ```
-   *
    * @example Error Handling
    * ```typescript
    * try {
@@ -399,10 +376,7 @@ export class ValidraEngine {
    * @public
    * @since 1.0.0
    */
-  public async validateAsync<T extends Record<string, any>>(
-    data: T,
-    callback?: string | ((result: ValidraResult<T>) => void | Promise<void>),
-  ): Promise<ValidraResult<T>> {
+  public async validateAsync<T extends Record<string, any>>(data: T): Promise<ValidraResult<T>> {
     const startTime = performance.now();
 
     try {
@@ -417,9 +391,6 @@ export class ValidraEngine {
 
       // Trigger completion callback
       await this.callbackManager.triggerComplete(result);
-
-      // Execute user callback if provided
-      await this.executeCallbackAsync(callback, result);
 
       const duration = performance.now() - startTime;
       this.logValidationComplete(duration, result, true);
@@ -641,13 +612,6 @@ export class ValidraEngine {
    * @internal
    */
   private initializeComponents(): void {
-    // Register callbacks with callback manager
-    for (const callback of this.callbacks) {
-      this.callbackManager.registerCallbacks({
-        onComplete: callback.callback as any,
-      });
-    }
-
     // Preload helpers for better performance
     const operations = this.rules.map(rule => rule.op);
     this.cacheManager.preloadHelpers(operations);
@@ -655,7 +619,6 @@ export class ValidraEngine {
     this.logger.info(`Engine initialized with ${this.rules.length} rules`, {
       debug: this.options.debug,
       rulesCount: this.rules.length,
-      callbacksCount: this.callbacks.length,
       memoryPoolEnabled: this.options.enableMemoryPool,
       streamingEnabled: this.options.enableStreaming,
     });
@@ -680,66 +643,6 @@ export class ValidraEngine {
         metadata: { data },
       });
       throw error;
-    }
-  }
-
-  /**
-   * Executes a callback after synchronous validation.
-   * @typeParam T - Type of the validated data.
-   * @param callback - Callback function or name.
-   * @param result - Validation result.
-   * @throws Error if the callback is not found or invalid.
-   * @internal
-   */
-  private executeCallback<T extends Record<string, any>>(
-    callback: string | ((result: ValidraResult<T>) => void) | undefined,
-    result: ValidraResult<T>,
-  ): void {
-    if (!callback) {
-      return;
-    }
-
-    if (typeof callback === 'string') {
-      const cb = this.callbacks.find(cb => cb.name === callback);
-      if (cb) {
-        cb.callback(result as ValidraResult<Record<string, any>>);
-      } else {
-        throw new Error(`Callback with name "${callback}" not found.`);
-      }
-    } else if (typeof callback === 'function') {
-      callback(result);
-    } else {
-      throw new Error('Callback must be a string or a function.');
-    }
-  }
-
-  /**
-   * Executes a callback after asynchronous validation.
-   * @typeParam T - Type of the validated data.
-   * @param callback - Callback function or name.
-   * @param result - Validation result.
-   * @throws Error if the callback is not found or invalid.
-   * @internal
-   */
-  private async executeCallbackAsync<T extends Record<string, any>>(
-    callback: string | ((result: ValidraResult<T>) => void | Promise<void>) | undefined,
-    result: ValidraResult<T>,
-  ): Promise<void> {
-    if (!callback) {
-      return;
-    }
-
-    if (typeof callback === 'string') {
-      const cb = this.callbacks.find(cb => cb.name === callback);
-      if (cb) {
-        await cb.callback(result as ValidraResult<Record<string, any>>);
-      } else {
-        throw new Error(`Callback with name "${callback}" not found.`);
-      }
-    } else if (typeof callback === 'function') {
-      await callback(result);
-    } else {
-      throw new Error('Callback must be a string or a function.');
     }
   }
 

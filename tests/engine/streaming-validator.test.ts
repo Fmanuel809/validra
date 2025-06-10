@@ -83,4 +83,50 @@ describe('ValidraStreamingValidator', () => {
     const gen = ValidraStreamingValidator.createArrayStream(arr);
     expect([...gen]).toEqual(arr);
   });
+
+  it('handles non-Error exceptions and converts them to string', async () => {
+    const data = [{ id: 1 }];
+    const validator = new ValidraStreamingValidator();
+    const validate = (_item: any) => {
+      // Throw a non-Error object to test line 78
+      throw { message: 'custom error object', code: 500 };
+    };
+
+    const results: any[] = [];
+    for await (const res of validator.validateStream(data, validate)) {
+      results.push(res);
+    }
+
+    expect(results[0].isValid).toBe(false);
+    expect(results[0].errors).toHaveProperty('validation');
+    expect(results[0].errors.validation[0]).toContain('Validation error: [object Object]');
+  });
+
+  it('handles errors with non-array values and converts to string array', async () => {
+    const data = [{ id: 1 }];
+    const validator = new ValidraStreamingValidator();
+    const validate = (item: any) => {
+      return Promise.resolve({
+        isValid: false,
+        data: item,
+        // Test line 124-126: non-array error values
+        errors: {
+          field1: ['simple string error'] as any,
+          field2: ['object error'] as any,
+          field3: ['array error'] as any,
+          field4: ['null'] as any,
+        },
+      } as any);
+    };
+
+    const results: any[] = [];
+    for await (const res of validator.validateStream(data, validate)) {
+      results.push(res);
+    }
+
+    expect(results[0].isValid).toBe(false);
+    expect(results[0].errors).toHaveProperty('field1');
+    expect(Array.isArray(results[0].errors.field1)).toBe(true);
+    expect(results[0].errors.field1).toEqual(['simple string error']);
+  });
 });

@@ -7,7 +7,6 @@
  * @category Integration Tests
  */
 
-import { ValidraCallback } from '@/engine/interfaces';
 import { Rule } from '@/engine/rule';
 import { ValidraEngine } from '@/engine/validra-engine';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -23,7 +22,7 @@ describe('ValidraEngine - End-to-End Integration Tests', () => {
   describe('User Registration Workflow', () => {
     beforeEach(() => {
       // Usar reglas estrictas de usuario como ejemplo de registro
-      engine = new ValidraEngine(strictUserRules, [], { debug: false });
+      engine = new ValidraEngine(strictUserRules, { debug: false });
     });
 
     test('should validate complete valid user registration', async () => {
@@ -127,7 +126,7 @@ describe('ValidraEngine - End-to-End Integration Tests', () => {
         { op: 'minLength', field: 'supplier.country', params: { value: 2 } },
       ];
 
-      engine = new ValidraEngine(productValidationRules, [], { debug: false });
+      engine = new ValidraEngine(productValidationRules, { debug: false });
     });
 
     test('should validate complete product with nested supplier data', async () => {
@@ -247,7 +246,7 @@ describe('ValidraEngine - End-to-End Integration Tests', () => {
         { op: 'maxLength', field: 'description', params: { value: 200 } },
       ];
 
-      engine = new ValidraEngine(transactionRules, [], { debug: false });
+      engine = new ValidraEngine(transactionRules, { debug: false });
     });
 
     test('should validate complete financial transaction', async () => {
@@ -481,23 +480,8 @@ describe('ValidraEngine - End-to-End Integration Tests', () => {
       expect(results[3]?.isValid).toBe(false);
     });
 
-    test('should handle callback errors gracefully', async () => {
-      const rules: Rule[] = [{ op: 'isString', field: 'name' }];
-
-      const failingCallback: ValidraCallback = {
-        name: 'failingCallback',
-        callback: vi.fn().mockImplementation(() => {
-          throw new Error('Callback error');
-        }),
-      };
-
-      const engine = new ValidraEngine(rules, [failingCallback], { debug: false });
-
-      const testData = { name: 'Test' };
-
-      // El engine lanza excepción, así que esperamos que falle
-      await expect(engine.validateAsync(testData)).rejects.toThrow();
-    });
+    // Note: Callback error handling tests removed as part of ValidraCallback system elimination
+    // Advanced ValidationCallbacks error handling should be tested via CallbackManager
   });
 
   describe('Integration with External Systems', () => {

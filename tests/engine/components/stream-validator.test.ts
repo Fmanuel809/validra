@@ -152,4 +152,29 @@ describe('StreamValidator', () => {
       expect(result.results[1].message).toBe('fail');
     });
   });
+
+  it('should handle empty stream and calculate success rate correctly', async () => {
+    const validator = new StreamValidator(
+      mockRuleCompiler as any,
+      mockDataExtractor as any,
+      mockMemoryPoolManager as any,
+    );
+
+    const onComplete = vi.fn();
+    const emptyData: any[] = [];
+
+    // Process empty stream
+    const results: any[] = [];
+    for await (const res of validator.validateStream(emptyData, v => ({ isValid: true, data: v }), { onComplete })) {
+      results.push(res);
+    }
+
+    // This should test line 240 - successRate calculation when processedCount is 0
+    expect(onComplete).toHaveBeenCalledWith({
+      totalProcessed: 0,
+      totalErrors: 0,
+      successRate: 0, // Should be 0 when processedCount is 0
+    });
+    expect(results).toHaveLength(0);
+  });
 });

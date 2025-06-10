@@ -1,11 +1,9 @@
-import type { ValidraCallback } from '@/engine/interfaces';
 import type { Rule } from '@/engine/rule';
 import { ValidraEngine } from '@/engine/validra-engine';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('ValidraEngine', () => {
   let rules: Rule[];
-  let callbacks: ValidraCallback[];
   let engine: ValidraEngine;
 
   beforeEach(() => {
@@ -15,8 +13,7 @@ describe('ValidraEngine', () => {
       { op: 'gte', field: 'age', params: { value: 18 } },
       { op: 'isEmpty', field: 'name', negative: true },
     ];
-    callbacks = [{ name: 'onComplete', callback: vi.fn() }];
-    engine = new ValidraEngine(rules, callbacks, {
+    engine = new ValidraEngine(rules, {
       debug: false,
     });
   });
@@ -46,27 +43,11 @@ describe('ValidraEngine', () => {
     expect(() => engine.validate(123)).toThrow('Data must be a valid object');
   });
 
-  it('executes named callback', () => {
-    const data = { email: 'user@example.com', age: 30, name: 'Luis' };
-    engine.validate(data, 'onComplete');
-    expect(callbacks[0]!.callback).toHaveBeenCalledWith(expect.objectContaining({ data }));
-  });
-
-  it('throws error if named callback does not exist', () => {
-    const data = { email: 'user@example.com', age: 30, name: 'Luis' };
-    expect(() => engine.validate(data, 'noExiste')).toThrow('Callback with name "noExiste" not found.');
-  });
-
-  it('executes callback as function', () => {
-    const cb = vi.fn();
-    const data = { email: 'a@b.com', age: 20, name: 'Ana' };
-    engine.validate(data, cb);
-    expect(cb).toHaveBeenCalledWith(expect.objectContaining({ data }));
-  });
+  // Note: Callback tests removed as part of ValidraCallback system elimination
 
   it('applies failFast and maxErrors options', () => {
     const data = { email: 'no-email', age: 15, name: '' };
-    const result = engine.validate(data, undefined, { failFast: true, maxErrors: 1 });
+    const result = engine.validate(data, { failFast: true, maxErrors: 1 });
     expect(result.isValid).toBe(false);
   });
 
@@ -112,7 +93,7 @@ describe('ValidraEngine', () => {
   });
 
   it('validateStream warns if streaming is disabled', async () => {
-    const engineNoStream = new ValidraEngine(rules, [], { enableStreaming: false });
+    const engineNoStream = new ValidraEngine(rules, { enableStreaming: false });
     const warnSpy = vi.spyOn(engineNoStream['logger'], 'warn');
     const dataArray = [{ email: 'a@b.com', age: 20, name: 'Ana' }];
     for await (const _item of engineNoStream.validateStream(dataArray)) {
@@ -130,12 +111,12 @@ describe('ValidraEngine', () => {
 
   it('throws error if callback argument is invalid type', () => {
     const data = { email: 'a@b.com', age: 20, name: 'Ana' };
-    // @ts-expect-error invalid callback
-    expect(() => engine.validate(data, 42)).toThrow('Callback must be a string or a function');
+    // Note: This test is no longer valid with the new callback system
+    expect(() => engine.validate(data)).not.toThrow();
   });
 
   it('logs debug info for validate and validateAsync when debug=true', async () => {
-    const dbgEngine = new ValidraEngine(rules, [], { debug: true });
+    const dbgEngine = new ValidraEngine(rules, { debug: true });
     const dbgSpy = vi.spyOn(dbgEngine['logger'], 'debug').mockImplementation(() => undefined);
     const data = { email: 'a@b.com', age: 20, name: 'Ana' };
 
@@ -149,7 +130,7 @@ describe('ValidraEngine', () => {
   });
 
   it('warns on slow synchronous validation (>100ms)', () => {
-    const slowEngine = new ValidraEngine(rules, [], { debug: false });
+    const slowEngine = new ValidraEngine(rules, { debug: false });
     const warnSpy = vi.spyOn(slowEngine['logger'], 'warn').mockImplementation(() => undefined);
     let calls = 0;
     vi.spyOn(globalThis.performance, 'now').mockImplementation(() => (calls++ === 0 ? 0 : 150));
@@ -165,7 +146,7 @@ describe('ValidraEngine', () => {
   });
 
   it('validateStream yields chunks and summary when streaming is enabled', async () => {
-    const streamEngine = new ValidraEngine(rules, [], { enableStreaming: true });
+    const streamEngine = new ValidraEngine(rules, { enableStreaming: true });
     const dataArray = [
       { email: 'x@x.com', age: 30, name: 'A' },
       { email: 'y@y.com', age: 17, name: 'B' },
@@ -199,7 +180,7 @@ describe('ValidraEngine', () => {
     const fakeAsync = {
       validateAsync: vi.fn().mockResolvedValue({ isValid: true, data: {} }),
     };
-    const depEngine = new ValidraEngine(rules, [], {}, { asyncValidator: fakeAsync as any });
+    const depEngine = new ValidraEngine(rules, {}, { asyncValidator: fakeAsync as any });
     const data = { email: 'a@b.com', age: 20, name: 'Ana' };
     const res = await depEngine.validateAsync(data);
     expect(fakeAsync.validateAsync).toHaveBeenCalledWith(data, rules);
@@ -208,7 +189,7 @@ describe('ValidraEngine', () => {
 
   it('continues on helper exception when allowPartialValidation=true', () => {
     const badRules = [{ field: 'email', op: 'doesNotExist' }];
-    const partialEngine = new ValidraEngine(badRules as any, [], { allowPartialValidation: true });
+    const partialEngine = new ValidraEngine(badRules as any, { allowPartialValidation: true });
     const result = partialEngine.validate({ email: 'x@x.com' } as any);
     expect(result.isValid).toBe(false);
     expect(result.errors).toHaveProperty('email');
@@ -216,7 +197,7 @@ describe('ValidraEngine', () => {
 
   it('throws on unknown operator when throwOnUnknownField=true', () => {
     const badRules = [{ field: 'email', op: 'doesNotExist' }];
-    const badEngine = new ValidraEngine(badRules as any, [], { throwOnUnknownField: true });
+    const badEngine = new ValidraEngine(badRules as any, { throwOnUnknownField: true });
     expect(() => badEngine.validate({ email: 'a@b.com' })).toThrow(
       /Helper with name "doesNotExist" not found|Unknown helper or operator/,
     );
@@ -246,7 +227,7 @@ describe('ValidraEngine', () => {
     // Forzar un resultado con errors vacío
     const data = { email: 'user@example.com', age: 25, name: 'Ana' };
     // Patch el engine para forzar errors vacío en el resultado
-    const engineWithPatch = new ValidraEngine(rules, callbacks, { debug: false });
+    const engineWithPatch = new ValidraEngine(rules, { debug: false });
     const spy = vi.spyOn(engineWithPatch['asyncValidator'], 'validateAsync').mockResolvedValue({
       isValid: true,
       data,
@@ -258,7 +239,7 @@ describe('ValidraEngine', () => {
   });
 
   it('validateStream handles error and calls errorHandler', async () => {
-    const streamEngine = new ValidraEngine(rules, [], { enableStreaming: true });
+    const streamEngine = new ValidraEngine(rules, { enableStreaming: true });
     // Patch errorHandler para detectar llamada
     const error = new Error('stream error');
     const fakeValidationError = {
@@ -290,31 +271,5 @@ describe('ValidraEngine', () => {
     errorHandlerSpy.mockRestore();
   });
 
-  it('throws error if named callback does not exist (async branch)', async () => {
-    const data = { email: 'user@example.com', age: 30, name: 'Luis' };
-    await expect(engine.validateAsync(data, 'noExiste')).rejects.toThrow('Callback with name "noExiste" not found.');
-  });
-
-  it('throws error if callback argument is invalid type (async branch)', async () => {
-    const data = { email: 'a@b.com', age: 20, name: 'Ana' };
-    // @ts-expect-error invalid callback
-    await expect(engine.validateAsync(data, 42)).rejects.toThrow('Callback must be a string or a function.');
-  });
-
-  it('executes named callback (async branch)', async () => {
-    const cb = vi.fn();
-    const data = { email: 'user@example.com', age: 30, name: 'Luis' };
-    const asyncCallbacks = [{ name: 'onComplete', callback: cb }];
-    const engineAsync = new ValidraEngine(rules, asyncCallbacks, { debug: false });
-    await engineAsync.validateAsync(data, 'onComplete');
-    expect(cb).toHaveBeenCalledWith(expect.objectContaining({ data }));
-  });
-
-  it('executes callback as function (async branch)', async () => {
-    const cb = vi.fn();
-    const data = { email: 'user@example.com', age: 30, name: 'Luis' };
-    const engineAsync = new ValidraEngine(rules, [], { debug: false });
-    await engineAsync.validateAsync(data, cb);
-    expect(cb).toHaveBeenCalledWith(expect.objectContaining({ data }));
-  });
+  // Note: Async callback tests removed as part of ValidraCallback system elimination
 });

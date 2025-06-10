@@ -137,4 +137,57 @@ describe('CallbackManager', () => {
     expect((manager as any).debounceTimers.has(id)).toBe(false);
     vi.useRealTimers();
   });
+
+  it('should log debug message when unregistering existing callbacks', () => {
+    const manager = new CallbackManager();
+    const logSpy = vi.spyOn((manager as any).logger, 'debug');
+
+    const cb = vi.fn();
+    const id = manager.registerCallbacks({ onComplete: cb });
+
+    // This should trigger the debug log on line 298-300
+    const existed = manager.unregisterCallbacks(id);
+
+    expect(existed).toBe(true);
+    expect(logSpy).toHaveBeenCalledWith(`Unregistered callbacks with ID: ${id}`);
+  });
+
+  it('should clear all debounce timers when calling clearCallbacks', async () => {
+    const manager = new CallbackManager();
+    const cb1 = vi.fn();
+    const cb2 = vi.fn();
+
+    // Register callbacks with debounce
+    manager.registerCallbacks({ onProgress: cb1 }, { debounceMs: 100 });
+    manager.registerCallbacks({ onProgress: cb2 }, { debounceMs: 100 });
+
+    // Trigger progress to create timers
+    manager.triggerProgress({ completed: 1, total: 2, percentage: 50, elapsedTime: 10 });
+
+    // Verify timers exist
+    expect((manager as any).debounceTimers.size).toBeGreaterThan(0);
+
+    // Clear all callbacks - this should test lines 665-666 and 739-740
+    manager.clearCallbacks();
+
+    // Verify all timers are cleared
+    expect((manager as any).debounceTimers.size).toBe(0);
+    expect((manager as any).registrations.size).toBe(0);
+  });
+
+  it('should return count of cleared registrations', () => {
+    const manager = new CallbackManager();
+
+    // Register multiple callbacks
+    manager.registerCallbacks({ onComplete: vi.fn() });
+    manager.registerCallbacks({ onProgress: vi.fn() });
+    manager.registerCallbacks({ onError: vi.fn() });
+
+    expect((manager as any).registrations.size).toBe(3);
+
+    // Clear all - this tests the count logic
+    manager.clearCallbacks();
+
+    expect((manager as any).registrations.size).toBe(0);
+  });
 });

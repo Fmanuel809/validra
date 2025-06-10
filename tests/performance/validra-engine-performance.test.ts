@@ -36,7 +36,7 @@ describe('ValidraEngine Performance', () => {
     for (const config of testConfigurations) {
       it(`Performance (${testCase.name} registros, ${config.name})`, async () => {
         const data = generateTestData(testCase.count, true); // true = datos complejos
-        const engine = new ValidraEngine(complexRules, [], {
+        const engine = new ValidraEngine(complexRules, {
           enableMemoryPool: config.enableMemoryPool,
           enableStreaming: config.enableStreaming,
           streamingChunkSize: 500,

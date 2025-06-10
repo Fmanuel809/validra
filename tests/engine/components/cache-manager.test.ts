@@ -117,4 +117,53 @@ describe('CacheManager', () => {
     await cm.preloadHelpers(['op', 'op']);
     expect(cm.getCachedHelper('op')).toBeUndefined(); // op no existe realmente
   });
+
+  it('should skip preloadHelpers when helper cache is disabled', async () => {
+    const cm = new CacheManager({ enableHelperCache: false });
+
+    // This should test line 218 - early return when helper cache is disabled
+    await cm.preloadHelpers(['op1', 'op2']);
+
+    // Verify no helpers were cached
+    expect(cm.getCachedHelper('op1')).toBeUndefined();
+    expect(cm.getCachedHelper('op2')).toBeUndefined();
+  });
+
+  it('should handle duplicate operations in preloadHelpers', async () => {
+    const cm = new CacheManager({ enableHelperCache: true });
+
+    // This should test line 226-227 - deduplication with Set
+    await cm.preloadHelpers(['op1', 'op1', 'op2', 'op2']);
+
+    // Should only try to load each operation once
+    expect(cm.hasHelper('op1')).toBe(false); // helpers don't exist, so false
+    expect(cm.hasHelper('op2')).toBe(false);
+  });
+
+  it('should skip caching path when path cache is disabled', () => {
+    const cm = new CacheManager({ enablePathCache: false });
+
+    // This should test line 301-302 - early return when path cache is disabled
+    const initialCacheSize = (cm as any).pathCache.size;
+    (cm as any).cachePathSegments('test.path', ['test', 'path']);
+
+    // Verify cache size didn't change
+    expect((cm as any).pathCache.size).toBe(initialCacheSize);
+  });
+
+  it('should evict LRU when path cache size limit is reached', () => {
+    const cm = new CacheManager({ maxPathCacheSize: 2, enablePathCache: true });
+
+    // Fill cache to limit
+    cm.getPathSegments('path1');
+    cm.getPathSegments('path2');
+
+    // Add one more to trigger eviction (line 304-306)
+    cm.getPathSegments('path3');
+
+    // First path should be evicted
+    expect((cm as any).pathCache.has('path1')).toBe(false);
+    expect((cm as any).pathCache.has('path2')).toBe(true);
+    expect((cm as any).pathCache.has('path3')).toBe(true);
+  });
 });

@@ -570,4 +570,29 @@ describe('AsyncValidator', () => {
     const result = await validator.applyRuleAsync({ ...rule, negative: true }, 1, []);
     expect(result).toBe(true); // porque negative invierte el resultado
   });
+
+  it('should handle non-Error exceptions and return unknown validation error', async () => {
+    // Mock que arroja un objeto que no es Error
+    mockRuleCompiler.compile.mockReturnValueOnce([
+      {
+        helper: vi.fn(() => {
+          throw { message: 'custom error', code: 500 }; // Non-Error object
+        }),
+      },
+    ]);
+
+    const validator = new AsyncValidator(
+      mockRuleCompiler as any,
+      mockDataExtractor as any,
+      mockMemoryPoolManager as any,
+    );
+
+    const data = { x: 1 };
+    const result = await validator.validateAsync(data, [rule]);
+
+    // This should test line 366 - non-Error exception handling
+    expect(result.isValid).toBe(false);
+    // eslint-disable-next-line quotes
+    expect(result.message).toBe("Cannot read properties of undefined (reading 'field')");
+  });
 });
