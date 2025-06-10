@@ -162,43 +162,38 @@ export class AsyncValidator implements IAsyncValidator {
    *
    * @since 1.0.0
    */
-  async applyRuleAsync(rule: Rule, value: unknown, args: unknown[]): Promise<boolean> {
+  async applyCompiledRuleAsync(compiledRule: any, value: unknown, args: unknown[]): Promise<boolean> {
+    const rule = compiledRule.original;
     const ruleInfo = `${rule.op}${rule.field ? ` on field "${rule.field}"` : ''}${rule.negative ? ' (negated)' : ''}`;
     this.logger.debug(`Applying rule: ${ruleInfo} with value:`, value, 'and args:', args);
-    return new Promise((resolve, reject) => {
-      try {
-        setTimeout(() => {
-          try {
-            const compiledRules = this.ruleCompiler.compile([rule]);
-            if (compiledRules.length === 0) {
-              resolve(false);
-              return;
-            }
-            const compiledRule = compiledRules[0];
-            if (!compiledRule) {
-              resolve(false);
-              return;
-            }
-            // Ejecutar el helper y soportar helpers asíncronos
-            const result = compiledRule.helper.apply(null, [value, ...args]);
-            if (result && typeof result.then === 'function') {
-              // Es una promesa
-              result
-                .then((isValid: boolean) => {
-                  resolve(Boolean(rule.negative ? !isValid : isValid));
-                })
-                .catch(reject);
-            } else {
-              resolve(Boolean(rule.negative ? !result : result));
-            }
-          } catch (error) {
-            reject(error);
-          }
-        }, 0);
-      } catch (error) {
-        reject(error);
-      }
-    });
+
+    // Ejecutar el helper directamente (ya compilado)
+    const result = compiledRule.helper.apply(null, [value, ...args]);
+
+    if (result && typeof result.then === 'function') {
+      // Es una promesa - manejar async
+      const isValid = await result;
+      return Boolean(rule.negative ? !isValid : isValid);
+    } else {
+      // Es síncrono
+      return Boolean(rule.negative ? !result : result);
+    }
+  }
+
+  /**
+   * Legacy method for applying single rules (kept for compatibility).
+   * For better performance, use applyCompiledRuleAsync with pre-compiled rules.
+   */
+  async applyRuleAsync(rule: Rule, value: unknown, args: unknown[]): Promise<boolean> {
+    const compiledRules = this.ruleCompiler.compile([rule]);
+    if (compiledRules.length === 0) {
+      return false;
+    }
+    const compiledRule = compiledRules[0];
+    if (!compiledRule) {
+      return false;
+    }
+    return this.applyCompiledRuleAsync(compiledRule, value, args);
   }
 
   /**
@@ -327,8 +322,8 @@ export class AsyncValidator implements IAsyncValidator {
             }
           }
 
-          // Apply rule asynchronously
-          const isValid = await this.applyRuleAsync(compiledRule.original, value, args);
+          // Apply rule asynchronously using the already compiled rule
+          const isValid = await this.applyCompiledRuleAsync(compiledRule, value, args);
 
           if (!isValid) {
             result.isValid = false;
