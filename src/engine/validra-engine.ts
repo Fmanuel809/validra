@@ -451,10 +451,7 @@ export class ValidraEngine {
    *
    * @template TData - The type of individual data objects in the stream
    * @param dataStream - An iterable or async iterable containing data objects to validate
-   * @param options - Optional streaming configuration options
-   * @param options.chunkSize - Number of items to process per chunk (default: 100)
-   * @param options.concurrency - Number of concurrent validations (default: 1)
-   * @param options.onProgress - Progress callback for monitoring stream processing
+   * @param options - Optional streaming configuration options (see {@link StreamingValidationOptions} for details)
    *
    * @yields {StreamingValidationResult<TData>} Intermediate validation results for each processed chunk
    * @returns {Promise<StreamingValidationSummary>} Final summary containing overall statistics
@@ -477,12 +474,12 @@ export class ValidraEngine {
    * }
    * ```
    *
-   * @example With Progress Monitoring
+   * @example With Chunk Completion Monitoring
    * ```typescript
    * const options = {
    *   chunkSize: 50,
-   *   onProgress: (processed, total) => {
-   *     console.log(`Progress: ${processed}/${total} (${(processed/total*100).toFixed(1)}%)`);
+   *   onChunkComplete: (result) => {
+   *     console.log(`Chunk completed: ${result.processedCount} items processed`);
    *   }
    * };
    *

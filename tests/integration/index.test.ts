@@ -79,7 +79,7 @@ describe('Validra Main Index Integration Tests', () => {
         mockDataExtractor as any,
         mockMemoryPool as any,
       );
-      const syncValidator = new SyncValidator({}, mockDataExtractor as any);
+      const syncValidator = new SyncValidator({}, mockDataExtractor as any, mockMemoryPool as any);
       const streamValidator = new StreamValidator(
         mockRuleCompiler as any,
         mockDataExtractor as any,
