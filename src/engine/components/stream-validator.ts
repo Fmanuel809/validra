@@ -7,6 +7,7 @@
  */
 
 import type { IDataExtractor } from '../interfaces/data-extractor.interface';
+import type { IErrorHandler } from '../interfaces/error-handler.interface';
 import type { IMemoryPoolManager } from '../interfaces/memory-pool-manager.interface';
 import type { IRuleCompiler } from '../interfaces/rule-compiler.interface';
 import type { IStreamValidator, StreamingValidationOptions } from '../interfaces/validators.interface';
@@ -85,17 +86,20 @@ export class StreamValidator implements IStreamValidator {
    * @param {IRuleCompiler} ruleCompiler - The rule compiler for processing validation rules
    * @param {IDataExtractor} dataExtractor - The data extractor for accessing nested values
    * @param {IMemoryPoolManager} memoryPoolManager - The memory pool manager for object reuse
+   * @param {IErrorHandler} errorHandler - The error handler for managing validation errors
    *
    * @example
    * ```typescript
    * const ruleCompiler = new RuleCompiler();
    * const dataExtractor = new DataExtractor();
    * const memoryPoolManager = new MemoryPoolManager({ maxPoolSize: 1000 });
+   * const errorHandler = new ErrorHandler();
    *
    * const streamValidator = new StreamValidator(
    *   ruleCompiler,
    *   dataExtractor,
-   *   memoryPoolManager
+   *   memoryPoolManager,
+   *   errorHandler
    * );
    * ```
    *
@@ -105,6 +109,7 @@ export class StreamValidator implements IStreamValidator {
     private readonly ruleCompiler: IRuleCompiler,
     private readonly dataExtractor: IDataExtractor,
     private readonly memoryPoolManager: IMemoryPoolManager,
+    private readonly errorHandler: IErrorHandler,
   ) {}
 
   /**
@@ -295,6 +300,20 @@ export class StreamValidator implements IStreamValidator {
         const result = await Promise.resolve(validator(item));
         results.push(result);
       } catch (error) {
+        const errorObj = error instanceof Error ? error : new Error(String(error));
+
+        // Route error through error handler with proper classification
+        this.errorHandler.handleError(errorObj, {
+          field: 'stream-item',
+          value: item,
+          metadata: {
+            severity: 'high',
+            category: 'validation',
+            operation: 'stream-validation',
+            component: 'StreamValidator',
+          },
+        });
+
         // Create error result
         results.push({
           data: item,

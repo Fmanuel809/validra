@@ -8,6 +8,7 @@
 
 import { ValidraLogger } from '@/utils/validra-logger';
 import type { IDataExtractor } from '../interfaces/data-extractor.interface';
+import type { IErrorHandler } from '../interfaces/error-handler.interface';
 import type { IMemoryPoolManager } from '../interfaces/memory-pool-manager.interface';
 import type { IRuleCompiler } from '../interfaces/rule-compiler.interface';
 import type { IAsyncValidator } from '../interfaces/validators.interface';
@@ -82,17 +83,20 @@ export class AsyncValidator implements IAsyncValidator {
    * @param {IRuleCompiler} ruleCompiler - Rule compiler for processing validation rules into executable forms
    * @param {IDataExtractor} dataExtractor - Data extractor for accessing nested object properties
    * @param {IMemoryPoolManager} memoryPoolManager - Memory pool manager for efficient object reuse
+   * @param {IErrorHandler} errorHandler - Error handler for proper error classification and reporting
    *
    * @example
    * ```typescript
    * const ruleCompiler = new RuleCompiler();
    * const dataExtractor = new DataExtractor();
    * const memoryPoolManager = new MemoryPoolManager({ maxPoolSize: 1000 });
+   * const errorHandler = new ErrorHandler();
    *
    * const asyncValidator = new AsyncValidator(
    *   ruleCompiler,
    *   dataExtractor,
-   *   memoryPoolManager
+   *   memoryPoolManager,
+   *   errorHandler
    * );
    * ```
    *
@@ -102,6 +106,7 @@ export class AsyncValidator implements IAsyncValidator {
     private readonly ruleCompiler: IRuleCompiler,
     private readonly dataExtractor: IDataExtractor,
     private readonly memoryPoolManager: IMemoryPoolManager,
+    private readonly errorHandler: IErrorHandler,
   ) {
     this.logger = new ValidraLogger('AsyncValidator');
   }
@@ -347,6 +352,23 @@ export class AsyncValidator implements IAsyncValidator {
         } catch (error) {
           result.isValid = false;
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          const errorObj = error instanceof Error ? error : new Error(String(error));
+
+          // Send error to error-handler with proper classification
+          this.errorHandler.handleError(errorObj, {
+            field: compiledRule.original.field,
+            rule: compiledRule.original,
+            value: this.dataExtractor.getValue(
+              data,
+              this.dataExtractor.getPathSegments(compiledRule.original.field || ''),
+            ),
+            metadata: {
+              severity: 'high',
+              category: 'validation',
+              operation: compiledRule.original.op,
+              ruleField: compiledRule.original.field,
+            },
+          });
 
           if (!result.errors) {
             result.errors = {} as any;

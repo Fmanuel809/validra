@@ -9,6 +9,7 @@
 import { helpersActions } from '@/dsl';
 import { ValidraLogger } from '@/utils/validra-logger';
 import { IDataExtractor } from '../interfaces/data-extractor.interface';
+import { IErrorHandler } from '../interfaces/error-handler.interface';
 import { IMemoryPoolManager } from '../interfaces/memory-pool-manager.interface';
 import { ISyncValidator } from '../interfaces/validators.interface';
 import { ValidraResult } from '../interfaces/validra-result';
@@ -68,6 +69,7 @@ export class SyncValidator implements ISyncValidator {
   };
   private readonly dataExtractor: IDataExtractor;
   private readonly memoryPoolManager: IMemoryPoolManager;
+  private readonly errorHandler: IErrorHandler;
 
   /**
    * Creates a new SyncValidator instance with configurable options and dependencies.
@@ -110,6 +112,7 @@ export class SyncValidator implements ISyncValidator {
     options: { debug?: boolean; allowPartialValidation?: boolean; throwOnUnknownField?: boolean } = {},
     dataExtractor: IDataExtractor,
     memoryPoolManager: IMemoryPoolManager,
+    errorHandler: IErrorHandler,
   ) {
     this.logger = new ValidraLogger('SyncValidator', {
       debug: options.debug ?? false,
@@ -118,6 +121,7 @@ export class SyncValidator implements ISyncValidator {
     this.options = options;
     this.dataExtractor = dataExtractor;
     this.memoryPoolManager = memoryPoolManager;
+    this.errorHandler = errorHandler;
   }
 
   /**
@@ -240,7 +244,22 @@ export class SyncValidator implements ISyncValidator {
         let usePoolForArgs = false;
 
         if ('params' in rule && (rule as any).params !== undefined) {
-          const paramValues = Object.values((rule as any).params);
+          const ruleParams = (rule as any).params;
+          let paramValues = Object.values(ruleParams);
+
+          // Special handling for regexMatch operation - convert string regex to RegExp object
+          if (rule.op === 'regexMatch' && paramValues.length > 0) {
+            const regexParam = paramValues[0];
+            if (typeof regexParam === 'string') {
+              // Convert string regex to RegExp object
+              try {
+                paramValues = [new RegExp(regexParam)];
+              } catch {
+                throw new Error(`Invalid regex pattern: ${regexParam}`);
+              }
+            }
+          }
+
           usePoolForArgs = this.memoryPoolManager.shouldPoolArguments(paramValues.length);
 
           if (usePoolForArgs) {
@@ -277,6 +296,20 @@ export class SyncValidator implements ISyncValidator {
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorObj = error instanceof Error ? error : new Error(String(error));
+
+        // Send error to error-handler with proper classification
+        this.errorHandler.handleError(errorObj, {
+          field: rule.field,
+          rule,
+          value: this.dataExtractor.getValue(data, this.dataExtractor.getPathSegments(rule.field)),
+          metadata: {
+            severity: 'high',
+            category: 'validation',
+            operation: rule.op,
+            ruleField: rule.field,
+          },
+        });
 
         // Log error - now controlled centrally by logger
         this.logger.warn(`Error applying rule ${rule.op} on field ${rule.field}`, {

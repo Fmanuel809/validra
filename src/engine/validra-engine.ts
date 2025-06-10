@@ -216,34 +216,6 @@ export class ValidraEngine {
         maxHelperCacheSize: 100,
       });
 
-    this.syncValidator =
-      dependencies?.syncValidator ??
-      new SyncValidator(
-        {
-          debug: this.options.debug,
-          allowPartialValidation: this.options.allowPartialValidation,
-          throwOnUnknownField: this.options.throwOnUnknownField,
-        },
-        this.dataExtractor,
-        this.memoryPoolManager,
-      );
-
-    this.asyncValidator =
-      dependencies?.asyncValidator ?? new AsyncValidator(this.ruleCompiler, this.dataExtractor, this.memoryPoolManager);
-
-    this.streamValidator =
-      dependencies?.streamValidator ??
-      new StreamValidator(this.ruleCompiler, this.dataExtractor, this.memoryPoolManager);
-
-    this.callbackManager =
-      dependencies?.callbackManager ??
-      new CallbackManager(
-        new ValidraLogger('CallbackManager', {
-          debug: this.options.debug,
-          silent: this.options.silent,
-        }),
-      );
-
     this.errorHandler =
       dependencies?.errorHandler ??
       new ErrorHandler(
@@ -255,6 +227,36 @@ export class ValidraEngine {
           enableRecovery: this.options.allowPartialValidation,
           logErrors: this.options.debug,
         },
+      );
+
+    this.syncValidator =
+      dependencies?.syncValidator ??
+      new SyncValidator(
+        {
+          debug: this.options.debug,
+          allowPartialValidation: this.options.allowPartialValidation,
+          throwOnUnknownField: this.options.throwOnUnknownField,
+        },
+        this.dataExtractor,
+        this.memoryPoolManager,
+        this.errorHandler,
+      );
+
+    this.asyncValidator =
+      dependencies?.asyncValidator ??
+      new AsyncValidator(this.ruleCompiler, this.dataExtractor, this.memoryPoolManager, this.errorHandler);
+
+    this.streamValidator =
+      dependencies?.streamValidator ??
+      new StreamValidator(this.ruleCompiler, this.dataExtractor, this.memoryPoolManager, this.errorHandler);
+
+    this.callbackManager =
+      dependencies?.callbackManager ??
+      new CallbackManager(
+        new ValidraLogger('CallbackManager', {
+          debug: this.options.debug,
+          silent: this.options.silent,
+        }),
       );
 
     // Initialize components with rules and callbacks
