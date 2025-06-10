@@ -208,7 +208,7 @@ describe('ValidraLogger', () => {
     test('should include timestamp in formatted messages', () => {
       logger.log('test message');
       const call = consoleSpy.log.mock.calls[0];
-      expect(call[0]).toMatch(/\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\]/);
+      expect(call?.[0]).toMatch(/\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\]/);
     });
 
     test('should include source name in formatted messages', () => {
@@ -220,7 +220,7 @@ describe('ValidraLogger', () => {
       logger.log('test message');
       const call = consoleSpy.log.mock.calls[0];
       // Should match: [TIMESTAMP] [SOURCE] MESSAGE
-      expect(call[0]).toMatch(/\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[TestLogger\] test message/);
+      expect(call?.[0]).toMatch(/\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[TestLogger\] test message/);
     });
   });
 

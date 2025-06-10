@@ -174,7 +174,7 @@ export class ValidraLogger {
    *
    * @since 1.0.0
    */
-  constructor(source: string, options?: ValidraLoggerOptions) {
+  constructor(source: string = 'Validra Engine', options?: ValidraLoggerOptions) {
     if (source) {
       this.source = source;
     }
